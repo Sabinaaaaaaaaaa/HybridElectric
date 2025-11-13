@@ -3,12 +3,6 @@ module HybridElectric
 ## Package imports
 #==========================================================================================#
 using Base.Math
-using StaticArrays
-using CoordinateTransformations
-using Rotations
-using Roots 
-using SplitApplyCombine
-using Plots
 using DelimitedFiles
 using Interpolations
 
