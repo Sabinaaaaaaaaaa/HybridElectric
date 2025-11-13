@@ -1,5 +1,3 @@
-using DelimitedFiles
-using Interpolations
 
 AIRFOILDATA = let 
      data = readdlm("Files/file.txt", skipstart=12) 
@@ -22,10 +20,3 @@ end
 
      
  
-     
-
-calculateclcd(5)
-
-#using Plots
-#plot(alpha,CL)
-#hello
