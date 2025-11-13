@@ -2,7 +2,6 @@ module HybridElectric
 
 ## Package imports
 #==========================================================================================#
-using Base.Math
 using DelimitedFiles
 using Interpolations
 
@@ -13,33 +12,33 @@ include("batterystorage.jl")
 
 #==========================================================================================#
 include("combustion.jl") 
-import .combustion: enginecombustion
+#import .combustion: enginecombustion
 export enginecombustion
 
 #==========================================================================================#
 include("electricmotor.jl") 
-import .electricmotor: emotor
+#import .electricmotor: emotor
 export emotor
 
 #==========================================================================================#
 include("powermanagement.jl") 
-import .powermanagement: powerdistrubution
+#import .powermanagement: powerdistrubution
 export powerdistrubution
 
 #==========================================================================================#
 include("sizing.jl") 
-import .sizing: fuelreq, totalmass
+#import .sizing: fuelreq, totalmass
 export fuelreq, totalmass
 
 #==========================================================================================#
 include("airfoildata.jl") 
-import .airfoildata: calculateclcd
+#import .airfoildata: calculateclcd
 export calculateclcd
 
 
 #==========================================================================================#
 include("BEMT.jl") 
-import .BEMT: BEMT
+#import .BEMT: BEMT
 export BEMT
 
 #==========================================================================================#

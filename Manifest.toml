@@ -2,7 +2,7 @@
 
 julia_version = "1.12.0"
 manifest_format = "2.0"
-project_hash = "7f0af88da144b9b821bdf12eda3afcd6d789589a"
+project_hash = "57fb0dfdf4c094d2900734fcc243ef1fac09b00c"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -318,7 +318,7 @@ uuid = "2e76f6c2-a576-52d4-95c1-20adfe4de566"
 version = "8.5.1+0"
 
 [[deps.HybridElectric]]
-deps = ["Interpolations", "Plots", "Polynomials"]
+deps = ["Interpolations", "Plots", "Polynomials", "StaticArrays"]
 path = "."
 uuid = "814c4b74-24ed-439b-a2af-fc9dd480adf7"
 version = "0.0.0"
