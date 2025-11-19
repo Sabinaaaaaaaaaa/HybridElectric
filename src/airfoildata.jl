@@ -1,5 +1,8 @@
 AIRFOILDATA = let 
-     data = readdlm("Files/file.txt", skipstart=12) 
+
+     filepath = joinpath(@__DIR__, "file.txt")
+     data = readdlm(filepath; skipstart=12)
+     
      alpha = data[:,1]
      CL = data[:,2]
      CD = data[:,3]
@@ -17,5 +20,5 @@ function calculateclcd(a)
     return (CL = AIRFOILDATA.cl(a), CD = AIRFOILDATA.cd(a))
 end
 
-     
+calculateclcd(5.0)  # Example usage
  
