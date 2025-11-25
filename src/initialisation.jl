@@ -28,7 +28,7 @@ struct Propulsion
 end
 
 #Mission segments
-struct MissionSegment
+mutable struct MissionSegment
     name::String
     h::Float64                  # Altitude [m]
     V::Float64                  # Velocity [m/s]

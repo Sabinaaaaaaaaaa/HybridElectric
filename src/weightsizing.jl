@@ -96,10 +96,11 @@ function batteryweightsizing(MissionSegment, g, drag, max_cruise_power, max_iter
             println("The battery weight sizing has converged. SOC in acceptable range.")
             break
         end
+        
     end
 
     W_fuel = Aircraft.MTOW - Aircraft.W_empty - Aircraft.W_payload - W_PGD - W_battery
     E_bat= total_battery_energycapacity(W_battery, Propulsion.specificenergy)
 
-    return W_fuel, W_battery, W_PGD, E_bat
+    return W_fuel, W_battery, W_PGD, E_bat, SOC_end
 end
