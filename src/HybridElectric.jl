@@ -10,14 +10,38 @@ include("airfoildata.jl")
 #import .airfoildata: calculateclcd
 export calculateclcd
 
+#==========================================================================================#
+include("initialisation.jl")
+export Aircraft, Propulsion, MissionSegment
 
+#==========================================================================================#
+include("aerodynamics.jl") 
+export dragforce, atmosphere
+
+#==========================================================================================#
+include("electricpropulsion.jl") 
+export batterypower, stateofcharge, totalenergycapacity, component_weight
+                    
 #==========================================================================================#
 include("BEMT.jl") 
 #import .BEMT: BEMT
 export BEMT
 
 #==========================================================================================#
+include("mission.jl")
+export runmission, MissionState
+
+#==========================================================================================#
+include("fuelpropulsion.jl") 
+export fuelconsumption
+
+#==========================================================================================#
+include("power.jl") 
+export powersplit, powerrequired
+
+#==========================================================================================#
+include("weightsizing.jl")
+export batteryweightsizing
+
 
 end
-
-

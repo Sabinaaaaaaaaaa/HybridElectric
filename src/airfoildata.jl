@@ -16,9 +16,6 @@ AIRFOILDATA = let
 end
 
 
-function calculateclcd(a)
-    return (CL = AIRFOILDATA.cl(a), CD = AIRFOILDATA.cd(a))
+function calculateclcd(α)
+    return (CL = AIRFOILDATA.cl(α), CD = AIRFOILDATA.cd(α))
 end
-
-calculateclcd(5.0)  # Example usage
- 
