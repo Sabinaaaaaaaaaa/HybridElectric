@@ -9,7 +9,7 @@
 
 #initialise the state 
 
-function runmission(MissionSegment, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g)
+function runmission(MissionSegment, drag, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g)
     state = MissionState(
         time = 0.0,                    
         SOC=MissionSegment.SOC_initial,                
@@ -36,7 +36,7 @@ function runmission(MissionSegment, Propulsion, Aircraft, W_PGD, W_battery, W_fu
 
             #ELECTRICAL INTEGRATION PART
             #calculate power required with the current weight estimate at this flight stage
-            P_req=powerrequired(drag_force, segment.V, weight, g, segment.dVdt, segment.ROC) #acceleration dV/dt=0 for steady flight
+            P_req=powerrequired(drag, segment.V, weight, g, segment.dVdt, segment.ROC) #acceleration dV/dt=0 for steady flight
 
             #power split
             P_EM_req, P_FB_req =powersplit(P_req, segment.ϕ)

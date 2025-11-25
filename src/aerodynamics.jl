@@ -18,10 +18,12 @@ function atmosphere(altitude)
     return T, P, ρ
 end
 
-function dragforce(e, AR, Cd0, W, g, q, S, ρ, V)
-    K=1/(π*e*AR)
-    Cl=W*g/(q*S)
-    Cd  = Cd0 + K*Cl^2; #drag coefficient
-    D=0.5*ρ*V^2*S*Cd #drag force
+
+
+function dragforce(Aircraft, W, g, MissionSegment)
+    q=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)
+    Cl=W*g/(q*Aircraft.S)
+    Cd  = Aircraft.Cd0 + Aircraft.K*Cl^2; #drag coefficient
+    D=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)*Aircraft.S*Cd #drag force
     return D
 end

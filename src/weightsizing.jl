@@ -17,12 +17,12 @@
 
 
 #done for cruise
-function batteryweightsizing(MissionSegment, g, drag_force, max_cruise_power, max_iterations, tolerance, damping=0.5)
+function batteryweightsizing(MissionSegment, g, drag, max_cruise_power, max_iterations, tolerance, damping=0.5)
 
     #input MTOW estimate
     W_cruise_estimate=MissionSegment.weight_fraction*Aircraft.MTOW
 
-    P_total_req=powerrequired(drag_force, MissionSegment.V, W_cruise_estimate, g, MissionSegment.dVdt, MissionSegment.ROC)
+    P_total_req=powerrequired(drag, MissionSegment.V, W_cruise_estimate, g, MissionSegment.dVdt, MissionSegment.ROC)
     if P_total_req > max_cruise_power
         max_cruise_power=P_total_req
     end
@@ -51,7 +51,7 @@ function batteryweightsizing(MissionSegment, g, drag_force, max_cruise_power, ma
         end
         
         #simulate mission with current battery size and fuel weight
-        check, SOC_end = runmission(MissionSegment, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial)
+        check, SOC_end = runmission(MissionSegment, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g)
 
         #check convergence
         SOC_margin = SOC_end - Propulsion.SOC_min

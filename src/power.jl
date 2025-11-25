@@ -14,9 +14,9 @@ function powersplit(P_total_req, ϕ)
 end
 
 
-function powerrequired(drag_force, V, Weight, g, dVdt, ROC)
+function powerrequired(drag, V, Weight, g, dVdt, ROC)
     #Cinar P_req = D*V+ d/dt( W*V^2/2g + W*h ) = steady drag power + Kinetic energy rate + Potential energy rate
-    D=drag_force
+    D=drag
     W=Weight
     P_drag=D*V
     P_kinetic=(W*V/g)*dVdt
