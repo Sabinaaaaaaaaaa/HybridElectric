@@ -10,7 +10,6 @@ struct Aircraft
     AR::Float64            # Aspect Ratio
     e::Float64             # Oswald Efficiency Factor
     Cd0::Float64           # Zero-lift Drag Coefficient
-    K::Float64             # Induced Drag Factor
 end
 
 
