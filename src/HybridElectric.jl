@@ -12,7 +12,7 @@ export calculateclcd
 
 #==========================================================================================#
 include("initialisation.jl")
-export Aircraft, Propulsion, MissionSegment
+export Aircraft, Propulsion, MissionSegment, MissionState
 
 #==========================================================================================#
 include("aerodynamics.jl") 
@@ -29,7 +29,7 @@ export BEMT
 
 #==========================================================================================#
 include("mission.jl")
-export runmission, MissionState
+export runmission
 
 #==========================================================================================#
 include("fuelpropulsion.jl") 

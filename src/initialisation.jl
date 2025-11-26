@@ -41,3 +41,11 @@ mutable struct MissionSegment
     dVdt::Float64               # Acceleration [m/s²]
     ρ::Float64                  # Air density [kg/m³]
 end
+
+
+mutable struct MissionState
+    time::Float64
+    SOC::Float64
+    W_fuel::Float64
+    W_total::Float64                
+end

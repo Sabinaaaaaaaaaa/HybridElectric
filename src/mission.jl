@@ -8,13 +8,12 @@
 # 6. Return new state
 
 #initialise the state 
-
 function runmission(MissionSegment, drag, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g)
     state = MissionState(
-        time = 0.0,                    
-        SOC=MissionSegment.SOC_initial,                
-        W_fuel=W_fuel_initial,          
-        W_total=0.0                     
+        0.0,
+        MissionSegment.SOC_initial,
+        W_fuel_initial,
+        0.0
     )
 
     batterycapacity = total_battery_energycapacity(W_battery, Propulsion.specificenergy) 

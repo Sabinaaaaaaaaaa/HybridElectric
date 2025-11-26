@@ -51,7 +51,7 @@ function batteryweightsizing(MissionSegment, g, drag, max_cruise_power, max_iter
         end
         
         #simulate mission with current battery size and fuel weight
-        check, SOC_end = runmission(MissionSegment, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g)
+        check, SOC_end = runmission(MissionSegment, drag, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial , g)
 
         #check convergence
         SOC_margin = SOC_end - Propulsion.SOC_min
