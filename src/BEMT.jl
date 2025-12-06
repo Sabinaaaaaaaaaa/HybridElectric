@@ -2,25 +2,31 @@
 #gives Thrust T, Torque Q, Power P, and efficiency η for each propeller
 include("airfoildata.jl")  #Airfoil Data
 
-
-
-
-function BEMT(R, r_hub, Nb, chordroot, chordtip, twist_deg_root, twist_deg_tip,V∞,Ω, ν, ρ)
+function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
    
 
     #solver parameters
     maxiter = 400;   #maximum number of iterations
     tol     = 1e-6;
-    relax   = 0.5;   #relaxation factor damps the update, preventing oscillation
-    N       = 30;    #discretisation
+    relax   = 0.3;   #relaxation factor damps the update, preventing oscillation
+    N       = length(r_R);    #discretisation
 
     ω       = Ω*2*pi/60; # angular velocity
-    r       = range(r_hub, R, length=N);
-    dr_uniform = (R - r_hub) / (N-1);
-    dr      = fill(dr_uniform, N) ;  
+    r       = r_R.*R;
 
-    c       = LinRange(chordroot, chordtip, N)  ;  #linear chord distribution
-    θ       = deg2rad.(LinRange(twist_deg_root,twist_deg_tip,N)); #linear twist distribution
+    dr      = zeros(N)  
+    for i in 1:N
+        if i == 1
+            dr[i] = (r[i+1] - r[i])
+        elseif i == N
+            dr[i] = (r[i] - r[i-1])
+        else
+            dr[i] = (r[i+1] - r[i-1]) / 2
+        end
+    end
+
+    c       = c_R.*R # chord distribution
+    θ       = deg2rad.(beta_table) #twist distribution
 
 
 
@@ -62,7 +68,7 @@ function BEMT(R, r_hub, Nb, chordroot, chordtip, twist_deg_root, twist_deg_tip,V
         for iter in 1:maxiter
             #compute local velocities
             Ut     = ω*ri*(1+ap[i]) ;#tangential velocity
-            Uax    = V∞*(1-a[i]);    #axial vwlocity
+            Uax    = V∞*(1-a[i]);    #axial velocity
             Ut = abs(Ut) < 1e-12 ? 1e-12 : Ut
             Uax = abs(Uax) < 1e-12 ? sign(Uax)*1e-12 : Uax
 

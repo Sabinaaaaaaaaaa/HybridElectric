@@ -19,7 +19,6 @@ function atmosphere(altitude)
 end
 
 
-
 function dragforce(Aircraft, W, g, MissionSegment)
     q=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)
     K=1/(π*Aircraft.e*Aircraft.AR)
@@ -28,3 +27,4 @@ function dragforce(Aircraft, W, g, MissionSegment)
     D=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)*Aircraft.S*Cd #drag force
     return D
 end
+

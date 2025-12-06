@@ -51,7 +51,7 @@ function runmission(MissionSegment, drag, Propulsion, Aircraft, W_PGD, W_battery
                     @warn "Battery depleted!" 
                     return false, state.SOC
                 end
-               
+                
             end
 
 
@@ -59,8 +59,11 @@ function runmission(MissionSegment, drag, Propulsion, Aircraft, W_PGD, W_battery
             if P_FB_req > 0
                 fuelburn = fuelconsumption(P_FB_req, Propulsion.SFC, dt)
                 state.W_fuel -= fuelburn
-                @warn "Out of fuel!" 
-                return false, state.SOC 
+                if state.W_fuel < 0
+                    @warn "Out of fuel!"
+                    return false
+                end
+            
             end
             
             state.time+=dt

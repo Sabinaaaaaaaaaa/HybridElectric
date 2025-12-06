@@ -17,17 +17,14 @@
 
 
 #done for cruise
-function batteryweightsizing(MissionSegment, g, drag, max_cruise_power, max_iterations, tolerance, damping=0.5)
-
+function batteryweightsizing(MissionSegment, g, drag, max_iterations, tolerance)
+    damping=0.5;
     #input MTOW estimate
     W_cruise_estimate=MissionSegment.weight_fraction*Aircraft.MTOW
 
     P_total_req=powerrequired(drag, MissionSegment.V, W_cruise_estimate, g, MissionSegment.dVdt, MissionSegment.ROC)
-    if P_total_req > max_cruise_power
-        max_cruise_power=P_total_req
-    end
 
-    P_EM_req, P_FB_req = powersplit(max_cruise_power, MissionSegment.ϕ)
+    P_EM_req, P_FB_req = powersplit(P_total_req, MissionSegment.ϕ)
 
     #may want to check these equations!!!
     W_motor = component_weight(P_EM_req, Propulsion.power_to_weight_motor)
@@ -77,11 +74,11 @@ function batteryweightsizing(MissionSegment, g, drag, max_cruise_power, max_iter
 
             W_battery=W_battery +damping*(W_battery_new - W_battery) #damping to prevent oscillations
         
-        elseif SOC_margin < 0.02 #battery sized well!
-            println("The battery weigth sizing has converged. The battery is optimally sized.")
+        elseif SOC_margin < 0.2 #battery sized well!
+            println("The battery weight sizing has converged. The battery is optimally sized.")
             break
 
-        elseif SOC_margin > 0.15 #battery oversized, can be reduced!
+        elseif SOC_margin > 0.35 #battery oversized, can be reduced!
             println("Battery oversized (SOC = $(SOC_end*100)%, min = $(Propulsion.SOC_min*100)%)")
             E_bat=total_battery_energycapacity(W_battery, Propulsion.specificenergy)
             E_excess=E_bat*(SOC_margin - 0.05) #keep 5% margin

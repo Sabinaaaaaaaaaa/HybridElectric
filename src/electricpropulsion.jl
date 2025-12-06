@@ -16,10 +16,7 @@ function stateofcharge(SOC_old, P_battery, dt, E_battery_total)
 end
 
 #calculate total battery energy capacity
-function total_battery_energycapacity(W_battery, specificenergy)
-    E_bat = W_battery * specificenergy #Wh
-    return E_bat
-end
+total_battery_energycapacity(W_battery, specificenergy) = W_battery * specificenergy #Wh
 
 
 component_weight(P_max, power_to_weight)= P_max / power_to_weight
