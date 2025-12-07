@@ -74,7 +74,7 @@ function batteryweightsizing(MissionSegment, g, drag, max_iterations, tolerance)
 
             W_battery=W_battery +damping*(W_battery_new - W_battery) #damping to prevent oscillations
         
-        elseif SOC_margin < 0.2 #battery sized well!
+        elseif SOC_margin < Propulsion.SOC_min #battery sized well!
             println("The battery weight sizing has converged. The battery is optimally sized.")
             break
 

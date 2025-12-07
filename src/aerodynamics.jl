@@ -22,7 +22,7 @@ end
 function dragforce(Aircraft, W, g, MissionSegment)
     q=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)
     K=1/(π*Aircraft.e*Aircraft.AR)
-    Cl=W*g/(q*Aircraft.S)
+    Cl=W*MissionSegment.load*g/(q*Aircraft.S)
     Cd  = Aircraft.Cd0 + K*Cl^2; #drag coefficient
     D=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)*Aircraft.S*Cd #drag force
     return D
