@@ -25,6 +25,9 @@ struct Propulsion
     power_to_weight_motor::Float64          # Motor Power-to-Weight Ratio [W/kg]
     power_to_weight_controller::Float64     # Controller Power-to-Weight Ratio [W/kg]
     W_engine::Float64                       # Engine weight [kg]
+    P_max_engine::Float64                   # Maximum Engine Power [W]
+    P_max_motor::Float64                    # Maximum Motor Power [W]
+    No_Engines::Int64                       # Number of Engines
 end
 
 #Mission segments
