@@ -26,7 +26,6 @@ struct Propulsion
     power_to_weight_controller::Float64     # Controller Power-to-Weight Ratio [W/kg]
     W_engine::Float64                       # Engine weight [kg]
     P_max_engine::Float64                   # Maximum Engine Power [W]
-    P_max_motor::Float64                    # Maximum Motor Power [W]
     No_Engines::Int64                       # Number of Engines
 end
 
@@ -39,8 +38,6 @@ mutable struct MissionSegment
     ROC::Float64                # Rate of Climb [m/s]
     ϕ::Float64                  # Hybrization Fraction of power from electric system
     load::Float64               # Load factor
-    SOC_initial::Float64        # Initial State of Charge
-    weight_fraction::Float64    # Weight fraction at this segment
     dVdt::Float64               # Acceleration [m/s²]
     ρ::Float64                  # Air density [kg/m³]
 end
