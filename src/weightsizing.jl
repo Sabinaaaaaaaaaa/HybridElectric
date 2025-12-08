@@ -20,7 +20,7 @@
 function batteryweightsizing(MissionSegment, g, drag, max_iterations, tolerance)
     damping=0.5;
     #input MTOW estimate
-    W_cruise_estimate=MissionSegment.weight_fraction*Aircraft.MTOW
+    W_cruise_estimate=Aircraft.MTOW
 
     P_total_req=powerrequired(drag, MissionSegment.V, W_cruise_estimate, g, MissionSegment.dVdt, MissionSegment.ROC)
 
@@ -30,7 +30,7 @@ function batteryweightsizing(MissionSegment, g, drag, max_iterations, tolerance)
     W_motor = component_weight(P_EM_req, Propulsion.power_to_weight_motor)
     W_controller = component_weight(P_EM_req/Propulsion.η_motor, Propulsion.power_to_weight_controller)
 
-    W_PGD= W_motor + W_controller + Propulsion.W_engine
+    W_PGD= W_motor + W_controller
 
     #iterative battery sizing
     #initial battery guess, rough sizing using energy-based estimate
@@ -58,10 +58,10 @@ function batteryweightsizing(MissionSegment, g, drag, max_iterations, tolerance)
             
             if SOC_end <= 0
                 scale_factor = 1.5 #if it did not work, multiply by a scale factor!
-            else
-                SOC_used = MissionSegment.SOC_initial - SOC_end
-                SOC_available = MissionSegment.SOC_initial - Propulsion.SOC_min
-                scale_factor = (SOC_used / SOC_available) * 1.05
+            #else
+                #SOC_used = MissionSegment.SOC_initial - SOC_end
+                #SOC_available = MissionSegment.SOC_initial - Propulsion.SOC_min
+                #scale_factor = (SOC_used / SOC_available) * 1.05
             end
 
             W_battery_new = W_battery * scale_factor #resize batteries
