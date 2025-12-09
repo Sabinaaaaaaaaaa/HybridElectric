@@ -1,7 +1,5 @@
 #Blade Element Momentum Theory
 #gives Thrust T, Torque Q, Power P, and efficiency η for each propeller
-include("airfoildata.jl")  #Airfoil Data
-
 function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
    
 
@@ -67,13 +65,10 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
 
         for iter in 1:maxiter
             #compute local velocities
-            Ut     = ω*ri*(1+ap[i]) ;#tangential velocity
-            Uax    = V∞*(1-a[i]);    #axial velocity
+            Ut     = ω*ri*(1-ap[i]) ;#tangential velocity
+            Uax    = V∞*(1+a[i]);    #axial velocity
             Ut = abs(Ut) < 1e-12 ? 1e-12 : Ut
             Uax = abs(Uax) < 1e-12 ? sign(Uax)*1e-12 : Uax
-
-
-            Urel   = sqrt( (Ut)^2 + (Uax)^2 );
 
             #compute local inflow angle
             φ         = atan(Uax,Ut);
@@ -85,8 +80,8 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
             Cl=clcd.CL; Cd=clcd.CD;
 
             #forces
-            Cn        = Cl*cos(φ) + Cd*sin(φ) ;#normal force coefficient
-            Ct        = Cl*sin(φ) - Cd*cos(φ); #tangential force coefficienct
+            Cn        = Cl*cos(φ) - Cd*sin(φ) ;#normal force coefficient
+            Ct        = Cl*sin(φ) + Cd*cos(φ); #tangential force coefficienct
             
             F = prandtl_F(Nb, R, r_hub, ri, φ)#prantl meyer correction
 
@@ -96,30 +91,24 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
 
             # BEM equations for induction factors
             # Standard formulation
-            if abs(sin(φ)) > 1e-6
-                a_new = 1.0 / (4*F*sin(φ)^2/(σ*Cn) + 1);
+            if abs(Cn) > 1e-8 && abs(sin(φ)) > 1e-8
+                κ  = 4 * F * sin(φ)^2       / (σ * Cn)
+                a_new  = 1.0 / (κ - 1.0)
             else
-                a_new = a[i];
-            end
-            
-            if abs(sin(φ)*cos(φ)) > 1e-6
-                ap_new = 1.0 / (4*F*sin(φ)*cos(φ)/(σ*Ct) - 1);
-            else
-                ap_new = ap[i];
+                a_new = a[i]
             end
 
-         # Apply Glauert/Buhl correction for high induction
-             if a_new > 0.4
-                 ac = 0.2;
-                 K = 4*F*sin(φ)^2 / (σ*Cn);
-                 discriminant = (K*(1-2*ac)+2)^2 + 4*(K*ac^2 - 1);
-                 if discriminant >= 0
-                     a_new = 0.5*(2 + K*(1-2*ac) - sqrt(discriminant));
-                 else
-                     # If discriminant is negative, use momentum theory result clamped at 0.95
-                     a_new = min(a_new, 0.95);
-                 end
-             end
+            if abs(Ct) > 1e-8 && abs(sin(φ)*cos(φ)) > 1e-8
+                κp = 4 * F * sin(φ)*cos(φ) / (σ * Ct)
+                ap_new = 1.0 / (κp + 1.0)
+            else
+                ap_new = ap[i]
+            end
+
+
+
+
+
 
             # Clamp values to physical bounds
             a_new = clamp(a_new, -0.5, 0.95);
@@ -144,16 +133,16 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
          
 
         #after convergence compute element forces with final a,ap
-        Uax      = V∞ * (1 - a[i]);
-        Ut      = ω * ri * (1 + ap[i]);
+        Uax      = V∞ * (1 + a[i]);
+        Ut      = ω * ri * (1 - ap[i]);
         Urel    = sqrt(Uax^2 + Ut^2);
         φ       = atan(Uax,Ut);
         α       = rad2deg(θi - φ);
 
         clcd = calculateclcd(α); Cl = clcd.CL; Cd = clcd.CD;
         
-        Cn     = Cl*cos(φ) + Cd*sin(φ);
-        Ct      = Cl*sin(φ) - Cd*cos(φ);
+        Cn     = Cl*cos(φ) - Cd*sin(φ);
+        Ct      = Cl*sin(φ) + Cd*cos(φ);
 
         dT[i]   = 0.5*ρ* (Urel^2) * ci * Cn * dr[i];
         dQ[i]   = 0.5*ρ* (Urel^2) * ci * Ct * ri * dr[i];
