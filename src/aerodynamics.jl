@@ -27,4 +27,3 @@ function dragforce(Aircraft, W, g, MissionSegment)
     D=0.5*(MissionSegment.ρ)*(MissionSegment.V^2)*Aircraft.S*Cd #drag force
     return D
 end
-
