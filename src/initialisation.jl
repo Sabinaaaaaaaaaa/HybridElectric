@@ -16,22 +16,22 @@ end
 #Propulsion System Parameters
 #Battery, Engine, Fuel
 struct Propulsion
-    η_motor::Float64                        # Motor Efficiency
-    η_controller::Float64                   # Controller Efficiency
+    η_motor::Float64                          # Motor Efficiency
+    η_controller::Float64                     # Controller Efficiency
     η_battery::Float64                      # Battery Efficiency
-    specificenergy::Float64                 # Battery Specific Energy [Wh/kg]
-    SOC_min::Float64                        # Minimum State of Charge
-    SFC::Float64                            # Specific Fuel Consumption [kg/(kW·h)]
-    power_to_weight_motor::Float64          # Motor Power-to-Weight Ratio [W/kg]
-    power_to_weight_controller::Float64     # Controller Power-to-Weight Ratio [W/kg]
-    W_engine::Float64                       # Engine weight [kg]
-    P_max_engine::Float64                   # Maximum Engine Power [W]
-    No_Engines::Int64                       # Number of Engines
-    energy_density_fuel::Float64            # Energy Density of Aviation Fuel [Wh/kg]
-    gas_turbine_efficiency::Float64         # Gas Turbine Efficiency
-    gearbox_efficiency::Float64             # Gearbox Efficiency
-    propulsive_efficiency::Float64          # Propulsive Efficiency
-    electric_generator_efficiency::Float64  # Electric Generator Efficiency
+    specificenergy::Float64                   # Battery Specific Energy [Wh/kg]
+    SOC_min::Float64                          # Minimum State of Charge
+    SFC::Float64                              # Specific Fuel Consumption [kg/(kW·h)]
+    power_to_weight_motor::Float64            # Motor Power-to-Weight Ratio [W/kg]
+    power_to_weight_controller::Float64       # Controller Power-to-Weight Ratio [W/kg]
+    W_engine::Float64                         # Engine weight [kg]
+    P_max_engine::Float64                     # Maximum Engine Power [W]
+    No_Engines::Int64                         # Number of Engines
+    energy_density_fuel::Float64              # Energy Density of Aviation Fuel [Wh/kg]
+    η_gas_turbine_efficiency::Float64         # Gas Turbine Efficiency
+    η_gearbox_efficiency::Float64             # Gearbox Efficiency
+    η_propulsive_efficiency::Float64          # Propulsive Efficiency
+    η_electric_generator_efficiency::Float64  # Electric Generator Efficiency
 end
 
 

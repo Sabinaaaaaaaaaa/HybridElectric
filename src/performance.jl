@@ -20,6 +20,7 @@
 
 #parameter sweep: ϕ, LD, e_batt, W_empty , W_payload
 
+
 function Range_parallel(Aircraft, Propulsion, E_0total, ϕ, LD, g; e_batt_Whkg = Propulsion.specificenergy, W_empty_override = nothing, W_payload_override = nothing)
     # allow sweeping weights without rebuilding structs
     W_empty   = isnothing(W_empty_override)   ? Aircraft.W_empty   : W_empty_override
@@ -29,9 +30,9 @@ function Range_parallel(Aircraft, Propulsion, E_0total, ϕ, LD, g; e_batt_Whkg =
     W_payload *= g
     
     η_em= Propulsion.η_motor
-    η_p =Propulsion.propulsive_efficiency 
-    η_gt= Propulsion.gas_turbine_efficiency
-    η_gb = Propulsion.gearbox_efficiency
+    η_p =Propulsion.η_propulsive_efficiency
+    η_gt= Propulsion.η_gas_turbine_efficiency
+    η_gb = Propulsion.η_gearbox_efficiency
     e_f = Propulsion.energy_density_fuel * 3600.0 #in J
     e_batt = e_batt_Whkg*3600 #Wh/kg to J/kg
     numerator   = W_empty + W_payload + (E_0total *g /e_batt)*( ϕ/η_em + (e_batt*(1-ϕ))/(e_f*η_gt) )
@@ -49,9 +50,10 @@ function Range_series(Aircraft, Propulsion, E_0total, ϕ, LD, g; e_batt_Whkg = P
     W_empty   *= g
     W_payload *= g
     η_em= Propulsion.η_motor
-    η_p =Propulsion.propulsive_efficiency 
-    η_gt= Propulsion.gas_turbine_efficiency
-    η_gb = Propulsion.gearbox_efficiency
+    η_p =Propulsion.η_propulsive_efficiency
+    η_gt= Propulsion.η_gas_turbine_efficiency
+    η_gb = Propulsion.η_gearbox_efficiency
+    η_eg = Propulsion.η_electric_generator_efficiency
     e_f = Propulsion.energy_density_fuel * 3600.0 #in J
     e_batt = e_batt_Whkg*3600 #Wh/kg to J/kg
      numerator   = W_empty + W_payload + (E_0total *g /e_batt)*( ϕ + (e_batt*(1-ϕ))/(e_f*η_gt*η_eg) )
