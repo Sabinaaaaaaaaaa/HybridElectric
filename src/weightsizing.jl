@@ -80,8 +80,8 @@ function batteryweightsizing(MissionSegment, g, drag, max_iterations, tolerance)
 
         elseif SOC_margin > 0.35 #battery oversized, can be reduced!
             println("Battery oversized (SOC = $(SOC_end*100)%, min = $(Propulsion.SOC_min*100)%)")
-            E_bat=total_battery_energycapacity(W_battery, Propulsion.specificenergy)
-            E_excess=E_bat*(SOC_margin - 0.05) #keep 5% margin
+            E_bat = total_battery_energycapacity(W_battery, Propulsion.specificenergy)
+            E_excess = E_bat*(SOC_margin - 0.05) #keep 5% margin
             W_battery_new = W_battery - (E_excess / Propulsion.specificenergy)
             if abs(W_battery_new - W_battery)<tolerance
                 println("The battery weight sizing has converged.")

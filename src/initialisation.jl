@@ -27,7 +27,14 @@ struct Propulsion
     W_engine::Float64                       # Engine weight [kg]
     P_max_engine::Float64                   # Maximum Engine Power [W]
     No_Engines::Int64                       # Number of Engines
+    energy_density_fuel::Float64            # Energy Density of Aviation Fuel [Wh/kg]
+    gas_turbine_efficiency::Float64         # Gas Turbine Efficiency
+    gearbox_efficiency::Float64             # Gearbox Efficiency
+    propulsive_efficiency::Float64          # Propulsive Efficiency
+    electric_generator_efficiency::Float64  # Electric Generator Efficiency
 end
+
+
 
 #Mission segments
 mutable struct MissionSegment

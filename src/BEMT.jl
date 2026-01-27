@@ -155,8 +155,8 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
     #OUTPUT RESULTS
     T       = sum(dT)*Nb         #Thrust per propeller!!!
     Q       = sum(dQ)  *Nb       #Torque
-    P       = Q * ω           #Power
-    η = (T*V∞)/P;       #efficiency 
-    J       = V∞/((Ω/60)*2*R) #advance ratio
+    P       = Q * ω              #Power
+    η = (T*V∞)/P;                #Efficiency 
+    J       = V∞/((Ω/60)*2*R)    #Advance ratio
     return T, Q, P, η, J
 end

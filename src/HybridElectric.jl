@@ -43,5 +43,8 @@ export powersplit, powerrequired
 include("weightsizing.jl")
 export batteryweightsizing
 
+#==========================================================================================#
+include("performance.jl")
+export Range_parallel, Range_series
 
 end
