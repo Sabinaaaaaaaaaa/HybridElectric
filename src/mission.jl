@@ -54,8 +54,8 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
             end
 
             if P_FB_req>Propulsion.P_max_engine 
-                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(P_max_engine) W")
-                return false, state.SOC
+                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(Propulsion.P_max_engine ) W")
+                return false, state.SOC, batterydepleted, state.W_fuel
             end
 
             
@@ -85,7 +85,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
                 state.W_fuel -= fuelburn
                 if state.W_fuel < 0
                     println("Fuel exhausted during mission segment! Need to increase fuel size.")
-                    return false, state.SOC
+                    return false, state.SOC, batterydepleted, state.W_fuel
                 end
             end
             
@@ -95,6 +95,6 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
         println("Completed segment: $(segment.name), Time: $(state.time) seconds, SOC: $(round(state.SOC*100,digits=2))%, Remaining Fuel Mass: $(round(state.W_fuel,digits=2)) kg")
 
     end
-    #misison is complete!
-    return true, state.SOC
+    #mission is complete!
+    return true, state.SOC, batterydepleted, state.W_fuel
 end
