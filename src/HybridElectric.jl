@@ -20,7 +20,7 @@ export dragforce, atmosphere
 
 #==========================================================================================#
 include("electricpropulsion.jl") 
-export batterypower, stateofcharge, total_battery_energycapacity, component_weight, packspecificenergy, battery
+export batterypower, stateofcharge, total_battery_energycapacity, component_weight, packspecificenergy, battery, f
                     
 #==========================================================================================#
 include("BEMT.jl") 

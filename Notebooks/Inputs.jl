@@ -366,6 +366,11 @@ begin
 	W_engine 				   = 2270.0
 	P_max_engine 			   = 3251252
 	No_Engines                 = 2
+	energy_density_fuel       	    = 11900.0
+	η_gas_turbine_efficiency 		= 0.35  
+	η_gearbox_efficiency 			= 0.95
+	η_propulsive_efficiency 		= 0.8
+	η_electric_generator_efficiency = 0.98
 end;
 
 # ╔═╡ 63305423-e5e7-4368-9c30-f2103c6069c9
@@ -382,10 +387,16 @@ md"""
 **W_engine** 	  				  = $(W_engine) kg
 **P_max_engine**                  = $(P_max_engine) W
 **No_Engines**                    = $(No_Engines)
+**energy_density_fuel**       	    = $(energy_density_fuel) Wh/kg
+**η_gas_turbine_efficiency** 		= $(η_gas_turbine_efficiency) 
+**η_gearbox_efficiency** 			= $(η_gearbox_efficiency)
+**η_propulsive_efficiency** 		= $(η_propulsive_efficiency)
+**η_electric_generator_efficiency** = $(η_electric_generator_efficiency)
 """
 
 # ╔═╡ e6b63c45-ff11-4f18-997a-c6a74bc08439
-propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines)
+propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+
 
 # ╔═╡ 79276a33-b7e9-4e9d-b3b6-0d40e6ee233f
 

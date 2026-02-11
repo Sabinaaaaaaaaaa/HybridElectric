@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 1d79cd2f-44d1-4db0-82c4-32e252d87b88
 # ╠═╡ show_logs = false
 begin
@@ -39,10 +51,13 @@ md"## Functions"
 md"""
 | Function 	  	  				| Inputs           				 | Outputs   |
 | ---- 			  				| ----- 		     			 | ----- 	 |
+| battery| name | usage, company, nominalvoltage, outputcurrent, amperehourcapacity, energystoragecapacity, weight, volume, height, width, depth, radius, cell_energy_density, cell_specific_energy, specific_power, max_voltage, min_voltage, continuous_discharge_rate, continuous_charge_rate|
+| packspecificenergy | specificenergy, packagingfactor | packspecificenergy|
 | atmosphere 	 		  		| altitude	     	             | T, P, ρ   |
 | dragforce 		 	  		| Aircraft, W, g, MissionSegment | D         |
 | calculateclcd	 		  		| α				                 | CL, CD    |
 | powerrequired 		  	    | drag, V, Weight, g, dVdt, ROC  |P _total _req|
+| takeoffpowerrequired | Weight,g, Vtakeoff, μ, dVdt, LD | P_takeoff|
 | powersplit 	   			    | P _total _req, ϕ        | P _EM _req, P _FB _req |
 | batterypower 	    | P _EM _req, η _motor, η _controller, η _battery | P _battery |
 | fuelconsumption 		  		| P _FB _req, SFC, dt  			 | Fuelburn  |
@@ -51,23 +66,79 @@ md"""
 | component _weight		  		| P _max, power _to _weight         | Weight    |
 """
 
+# ╔═╡ cbfcc143-f63b-4f89-9a09-fe06cea630ab
+
+
+# ╔═╡ a997018d-634a-4c5e-8db5-b495692f44f5
+md" ### battery"
+
+# ╔═╡ d54a0804-006d-4a27-a275-be5cb004ef33
+md"""
+For this function, the user selects a battery cell from the list of options provided. The function outputs the following features for the selected battery. 
+
+* Typical usage
+* Company
+* Nominal output voltage (V)
+* Continuous output current (max A)
+* Ampere-hour capacity (Ah) 
+* Energy Storage Capacity (Wh)
+* Weight (kg)
+* Volume (m^2)
+* Height (m)
+* Width (m)
+* Depth (m)
+* Radius (m) if cylindrical
+* Cell-level energy density (Wh/m^3)
+* Cell-level specific energy (Wh/kg)
+* Specific power (W/kg)
+* Maximum voltage (V)
+* Minimum voltage (V)
+* Continuous discharge rate (C-rate)
+* Continuous charge rate (C-rate)
+
+The typical usage will be particularly useful for GPB and VPB when calculating the pack specific energy.
+"""
+
+# ╔═╡ 6909eef8-8930-40d5-a112-8517ed91fce8
+@bind batteryselection Select(["Model 9952 Aerospace Battery", "MER Battery Development", "Model 9422 Aircraft battery", "Model 9654 Modular Lithium Ion Batt", "Model 9654 Modular Lithium Ion Batt2", "Model 9553LV Aerospace Battery", "Model 9553HV Aerospace Battery", 	"Model 9492 Aerospace Battery", "Model L1147 Aerospace Battery", "Model L1147 Aerospace Battery2", "Model 9535 Small-Profile Modular UU",	"US18650VTC6", "SLPB065070180", "IMR18650", "POA000343", "Glide", "POA000412", "MODEL INR-21700-M50A", "INR18650-30Q", "BYD Blade Battery Cell"])
+
+
+# ╔═╡ 07f2b3e8-11f0-4aef-946a-9aaead57befb
+batt=battery(batteryselection)
+
+# ╔═╡ 39753a24-2b3c-4205-b752-fb4b69291301
+md"""
+**$batteryselection** 
+
+| Parameter     			| Value   | Units| 
+| ----- 					| ---- 	            |----|
+| Typical usage 			| $(batt.usage)                     |N/a|
+| Company 					| $(batt.company)                   |N/a|
+| Nominal output voltage    | $(batt.nominalvoltage)            |V|
+| Continuous output current | $(batt.outputcurrent)             |max A|
+| Ampere-hour capacity      | $(batt.amperehourcapacity)        |Ah|
+| Energy Storage Capacity   | $(batt.energystoragecapacity)     |Wh|
+| Weight 					| $(batt.weight)                    |kg|
+| Volume 					| $(batt.volume)                    |m^2|
+| Height 					| $(batt.height)                    |m|
+| Width 					| $(batt.width)                     |m|
+| Depth 					| $(batt.depth)                     |m|
+| Radius if cylindrical     | $(batt.radius)                    |m|
+| Cell-level energy density | $(batt.cell_energy_density)       |Wh/m^3|
+| Cell-level specific energy| $(batt.cell_specific_energy)      |Wh/kg|
+| Specific power 			| $(batt.specific_power)            |W/kg|
+| Maximum voltage 			| $(batt.max_voltage)               |V|
+| Minimum voltage 			| $(batt.min_voltage)               |V|
+| Continuous discharge rate | $(batt.continuous_discharge_rate) |C-rate|
+| Continuous charge rate    | $(batt.continuous_charge_rate)    |C-rate|
+
+"""
+
 # ╔═╡ 379897c5-35d6-44b3-b861-b2995efad223
 
 
 # ╔═╡ e4ac0d48-6f8e-414b-af94-bdbba09e41f8
 md"### Define Inputs: Dornier 328 Example"
-
-# ╔═╡ 5a340bcc-74bf-4761-a792-794b2f993c9f
-# ╠═╡ disabled = true
-#=╠═╡
-md"""
-MTOW
-$(@bind MTOW Slider(5000.0:20000.0, default=13990.0, show_value=true)) kg
-"""
-  ╠═╡ =#
-
-# ╔═╡ 703b5256-ae37-4e51-b9ea-e62530d89f8e
-MTOW=13990.0
 
 # ╔═╡ 566dba61-de02-42b2-9da5-50b9376d87d5
 begin
@@ -80,25 +151,54 @@ begin
 end;
 
 # ╔═╡ d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
+#=╠═╡
 aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0)
+  ╠═╡ =#
+
+# ╔═╡ f2e53147-8511-48f1-9823-3ee59a823c9c
+md"### packspecificenergy" 
+
+# ╔═╡ 5df455f6-db1c-46b6-badc-09a8e435557e
+md"""
+This function is used to compute the pack specific energy [Wh/kg]. The sizing methodology already enforces SOC minimum and efficiencies so the pack specific energy is given by
+
+$e_{pack} ≈ e_{cell}f$ 
+
+where $f$ is the packaging factor defined as the cell mass fraction of the pack; how much space the cell takes. The rest of the space is allocated for thermal management and wiring. This packaging factor is dependent on the type of battery selected.
+
+"""
+
+# ╔═╡ 7c93552c-f98c-44c0-9b8a-d4e5198bcd0c
+begin
+	cellspecificenergy=250
+	packagingfactor=0.855
+end;
+
+# ╔═╡ 54058d4e-43e3-4c81-9b1a-2f21678abf98
+specific_energy=packspecificenergy(cellspecificenergy, packagingfactor)
 
 # ╔═╡ a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
 begin
-	η_motor                    = 0.95 #95-97% efficiency   
-	η_controller               = 0.96
-	η_battery                  = 0.95
-	specificenergy             = 250.0
-	SOC_min                    = 0.2
-	SFC                        = 0.332
-	power_to_weight_motor      = 5200
-	power_to_weight_controller = 3702.70
-	W_engine 				   = 2270.0
-	P_max_engine 			   = 3251252
-	No_Engines                 = 2
+	η_motor                    		= 0.95 #95-97% efficiency   
+	η_controller               		= 0.96
+	η_battery                  		= 0.95
+	specificenergy             		= specific_energy
+	SOC_min                    		= 0.2
+	SFC                        		= 0.332
+	power_to_weight_motor      		= 5200
+	power_to_weight_controller 		= 3702.70
+	W_engine 				   		= 2270.0
+	P_max_engine 			   		= 3251252
+	No_Engines                 		= 2
+	energy_density_fuel       	    = 11900.0
+	η_gas_turbine_efficiency 		= 0.35  
+	η_gearbox_efficiency 			= 0.95
+	η_propulsive_efficiency 		= 0.8
+	η_electric_generator_efficiency = 0.98
 end;
 
 # ╔═╡ dbc78b24-e597-47b0-95ef-c8aa5cdb7a81
-propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines)
+propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
 
 # ╔═╡ be304f17-40e9-447b-a9dc-592a05a3fd47
 begin
@@ -147,7 +247,9 @@ g=9.81
 md"$D = \frac{1}{2} ρ V^2 S C_d$"
 
 # ╔═╡ cfdab272-c3b0-411d-b85a-8f03ac6f4939
+#=╠═╡
 D = dragforce(aircraft, MTOW, g, CRUISE)
+  ╠═╡ =#
 
 # ╔═╡ 24a979f9-7932-4f7d-8459-6ba43f8591a7
 md"**Verification**"
@@ -156,19 +258,29 @@ md"**Verification**"
 q=0.5*(CRUISE.ρ)*(CRUISE.V^2)
 
 # ╔═╡ 2a408a96-5684-4cc6-8d0c-ea585ede7748
+#=╠═╡
 K=1/(π*aircraft.e*aircraft.AR)
+  ╠═╡ =#
 
 # ╔═╡ 6e59cd33-3343-4897-9a5b-bad08ab0859d
+#=╠═╡
 W=MTOW
+  ╠═╡ =#
 
 # ╔═╡ f1442b85-e9e6-4289-b730-86faa34e92ce
+#=╠═╡
 Cl=W*g/(q*aircraft.S)
+  ╠═╡ =#
 
 # ╔═╡ a41c320e-fc5b-4893-be41-5ab879d960ca
+#=╠═╡
 Cd  = aircraft.Cd0 + K*Cl^2 #drag coefficient
+  ╠═╡ =#
 
 # ╔═╡ 0190530c-dd77-43f6-bbdd-b824020079ec
+#=╠═╡
 Drag=0.5*(CRUISE.ρ)*(CRUISE.V^2)*aircraft.S*Cd
+  ╠═╡ =#
 
 # ╔═╡ 9de0bc16-ad1f-42ea-a013-a419e116ba24
 
@@ -190,8 +302,6 @@ begin
 end;
 
 # ╔═╡ 33244633-2341-47b0-b094-a30d4fa62c67
-# ╠═╡ disabled = true
-#=╠═╡
 begin
 	
 	p1 = plot(alpha, CL,
@@ -210,7 +320,6 @@ begin
 	
 	plot(p1, p2, layout=(1,2), size=(1200, 400))
 end
-  ╠═╡ =#
 
 # ╔═╡ f69a98c9-433e-4349-8a1b-f46571a71c43
 CLlow, CDlow = calculateclcd(-20) 
@@ -246,16 +355,24 @@ Potential component: $P_{potential} = W g ROC)$
 "
 
 # ╔═╡ f350490b-f639-4b41-9c70-2fb91efabbb1
+#=╠═╡
 P_drag=D*CRUISE.V
+  ╠═╡ =#
 
 # ╔═╡ 738d5e91-e491-4cd4-a540-2e14ea72d08f
+#=╠═╡
 P_kinetic = (MTOW*CRUISE.V/g)*CRUISE.dVdt
+  ╠═╡ =#
 
 # ╔═╡ eae68a35-c100-4071-bcd0-a07865a6b3a9
+#=╠═╡
 P_potential=MTOW*g*CRUISE.ROC
+  ╠═╡ =#
 
 # ╔═╡ 59ba8a65-1971-46bf-8c30-177a089c24a8
-P_total_req = powerrequired(D, CRUISE.V, MTOW, g, CRUISE.dVdt, CRUISE.ROC) #this shows kW
+#=╠═╡
+P_total_req = powerrequired(D, CRUISE.V, MTOW, g, CRUISE.dVdt, CRUISE.ROC) 
+  ╠═╡ =#
 
 # ╔═╡ 16d236e7-6580-4308-a81a-c219908890e9
 md"
@@ -263,6 +380,32 @@ The aircraft engines have a maximum take-off power rating of 2x2180 shp which is
 
 When using this value in the full mission analysis, BEMT function is used to generate an efficiency factor which is used to compute the actual power required.
 "
+
+# ╔═╡ 89091c1e-3ee2-44af-ba36-6cd68ed6812f
+
+
+# ╔═╡ 8ddcb6bf-cd79-454e-89fd-7fd242fd603a
+md"### takeoffpowerrequired"
+
+# ╔═╡ dddcca4a-07d9-4c14-8285-7a28a8fd1cbb
+md"""
+This function is used to compute the power required during takeoff. The following equation was employed.
+
+$P_{takeoff} = m g \left(  μ \left[  1 - \left( \frac{v}{v_{takeoff}}   \right)^2       \right]   +   \frac{1}{L/D} \left( \frac{v}{v_{takeoff}}   \right)^2  +   \frac{a}{g}                          \right)V$
+
+
+A constant velocity was used during this period. $V=0.7V_{takeoff}$.
+"""
+
+# ╔═╡ c546b490-f38c-4ee4-bd0c-9f196bb718d0
+#=╠═╡
+takeoff = MissionSegment("Takeoff", h, Vtakeoff, Vtakeoff/1000, ROC, ϕ, load, 2, 1.225)
+  ╠═╡ =#
+
+# ╔═╡ 129ffe98-1444-43c2-b115-9335fed08816
+#=╠═╡
+Powerreq=takeoffpowerrequired(MTOW,g, takeoff.V, μ, takeoff.dVdt, LD)
+  ╠═╡ =#
 
 # ╔═╡ 03818506-af7e-4151-96e8-4b6b38248d19
 
@@ -285,13 +428,19 @@ The units are the same units that the input $P_{total_{req}}$ is defined as. Thi
 "
 
 # ╔═╡ e20e4f87-a763-47d6-b252-7e073b1e717e
+#=╠═╡
 P_EM_req, P_FB_req = powersplit(P_total_req, ϕ) 
+  ╠═╡ =#
 
 # ╔═╡ 20df341b-33e0-4460-8607-e40d606fbef4
+#=╠═╡
 P_EM_req0, P_FB_req0 = powersplit(P_total_req, 0) 
+  ╠═╡ =#
 
 # ╔═╡ 29356dd2-61d4-4d99-a69f-1e7466398143
+#=╠═╡
 P_EM_req1, P_FB_req1 = powersplit(P_total_req, 1) 
+  ╠═╡ =#
 
 # ╔═╡ 413fb4e9-13de-4554-9d81-0fd9e6de3f4d
 
@@ -311,7 +460,10 @@ The fuel burn is returned with units kg.
 "
 
 # ╔═╡ 89970cdb-2fb1-445c-b075-6f78d9f57b21
+# ╠═╡ disabled = true
+#=╠═╡
 Fuelburn = fuelconsumption(P_FB_req, propulsion.SFC, CRUISE.duration)
+  ╠═╡ =#
 
 # ╔═╡ 4a671fc1-c2e6-4c24-b8d0-612cdb1acdf2
 
@@ -329,7 +481,10 @@ Again it returns the same units as the input $P_{EM_{req}}$ which is Watts.
 "
 
 # ╔═╡ 658233d5-c8e9-4ff1-ab8a-83f4ae89c8cb
+# ╠═╡ disabled = true
+#=╠═╡
 P_battery = batterypower(P_EM_req, η_motor, η_controller, η_battery) 
+  ╠═╡ =#
 
 # ╔═╡ 92b88309-8f6f-443d-a314-bb91807ad0db
 
@@ -419,25 +574,62 @@ begin
 	power_to_weight=10.0
 end;
 
+# ╔═╡ 5a340bcc-74bf-4761-a792-794b2f993c9f
+# ╠═╡ disabled = true
+#=╠═╡
+md"""
+MTOW
+$(@bind MTOW Slider(5000.0:20000.0, default=13990.0, show_value=true)) kg
+"""
+  ╠═╡ =#
+
+# ╔═╡ 703b5256-ae37-4e51-b9ea-e62530d89f8e
+#=╠═╡
+MTOW=13990.0
+  ╠═╡ =#
+
 # ╔═╡ 60530e30-e409-4b64-b41a-28527390d864
+#=╠═╡
 Weight = component_weight(P_max, power_to_weight)
+  ╠═╡ =#
+
+# ╔═╡ ff19118c-8cc6-410d-b4e1-c25a60f6879a
+#=╠═╡
+begin
+	Vtakeoff= 70 
+	μ = 0.02
+	LD=10
+	Weight=MTOW
+	runwaydistance=1000
+end
+  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╟─b2afe8b0-d096-11f0-af04-7574eb00a750
 # ╟─ca59f52a-0dfc-4708-8418-5fb46252a9e8
-# ╠═1d79cd2f-44d1-4db0-82c4-32e252d87b88
+# ╟─1d79cd2f-44d1-4db0-82c4-32e252d87b88
 # ╟─23e41e56-a07a-47c4-bd8d-7cbc30f45c96
 # ╟─e788f3ac-8e7c-4f44-aee4-e06751b40c52
+# ╟─cbfcc143-f63b-4f89-9a09-fe06cea630ab
+# ╟─a997018d-634a-4c5e-8db5-b495692f44f5
+# ╟─d54a0804-006d-4a27-a275-be5cb004ef33
+# ╠═6909eef8-8930-40d5-a112-8517ed91fce8
+# ╠═07f2b3e8-11f0-4aef-946a-9aaead57befb
+# ╟─39753a24-2b3c-4205-b752-fb4b69291301
 # ╟─379897c5-35d6-44b3-b861-b2995efad223
 # ╟─e4ac0d48-6f8e-414b-af94-bdbba09e41f8
 # ╠═5a340bcc-74bf-4761-a792-794b2f993c9f
 # ╠═703b5256-ae37-4e51-b9ea-e62530d89f8e
-# ╟─566dba61-de02-42b2-9da5-50b9376d87d5
-# ╠═d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
+# ╠═566dba61-de02-42b2-9da5-50b9376d87d5
+# ╟─d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
+# ╟─f2e53147-8511-48f1-9823-3ee59a823c9c
+# ╟─5df455f6-db1c-46b6-badc-09a8e435557e
+# ╠═7c93552c-f98c-44c0-9b8a-d4e5198bcd0c
+# ╠═54058d4e-43e3-4c81-9b1a-2f21678abf98
 # ╠═a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
-# ╠═dbc78b24-e597-47b0-95ef-c8aa5cdb7a81
+# ╟─dbc78b24-e597-47b0-95ef-c8aa5cdb7a81
 # ╠═be304f17-40e9-447b-a9dc-592a05a3fd47
-# ╠═c3383805-8465-4650-92fa-c84095b7f1a4
+# ╟─c3383805-8465-4650-92fa-c84095b7f1a4
 # ╟─3efc6fc2-dec8-4727-82e1-bf2f65143933
 # ╟─f42b2d58-fdcf-4e32-88bf-a4782069ddf8
 # ╠═406fd9ae-e2cd-4af4-a687-e8ad3e9dcfba
@@ -446,7 +638,7 @@ Weight = component_weight(P_max, power_to_weight)
 # ╟─87d623cd-1faa-4fa7-9861-615d06d47f23
 # ╟─37820190-bf34-4493-a275-a30fe835c9c6
 # ╟─9735528a-5b75-4fb6-809c-7134c8bf3f06
-# ╠═d40f0ae4-d0c1-402b-9790-fe897f11779b
+# ╟─d40f0ae4-d0c1-402b-9790-fe897f11779b
 # ╟─83c68da1-9867-4f52-8ed6-b77684dafcf7
 # ╠═cfdab272-c3b0-411d-b85a-8f03ac6f4939
 # ╟─24a979f9-7932-4f7d-8459-6ba43f8591a7
@@ -459,7 +651,7 @@ Weight = component_weight(P_max, power_to_weight)
 # ╟─9de0bc16-ad1f-42ea-a013-a419e116ba24
 # ╟─b4b71505-7987-4f7f-aab5-7559a34bb2fa
 # ╠═d757c810-e13f-467f-bba2-6db102b3e01e
-# ╟─e67aff11-db63-4e43-9bec-29b6fd883ac1
+# ╠═e67aff11-db63-4e43-9bec-29b6fd883ac1
 # ╠═5c5e0657-347a-4eef-ad42-24d228db53fc
 # ╟─33244633-2341-47b0-b094-a30d4fa62c67
 # ╠═f69a98c9-433e-4349-8a1b-f46571a71c43
@@ -474,6 +666,12 @@ Weight = component_weight(P_max, power_to_weight)
 # ╠═eae68a35-c100-4071-bcd0-a07865a6b3a9
 # ╠═59ba8a65-1971-46bf-8c30-177a089c24a8
 # ╟─16d236e7-6580-4308-a81a-c219908890e9
+# ╟─89091c1e-3ee2-44af-ba36-6cd68ed6812f
+# ╟─8ddcb6bf-cd79-454e-89fd-7fd242fd603a
+# ╟─dddcca4a-07d9-4c14-8285-7a28a8fd1cbb
+# ╠═ff19118c-8cc6-410d-b4e1-c25a60f6879a
+# ╠═c546b490-f38c-4ee4-bd0c-9f196bb718d0
+# ╠═129ffe98-1444-43c2-b115-9335fed08816
 # ╟─03818506-af7e-4151-96e8-4b6b38248d19
 # ╟─65563337-6448-4360-819a-1e227b5eb630
 # ╟─f2637223-55ef-412c-bdeb-026e0d7c8c3e
@@ -483,15 +681,15 @@ Weight = component_weight(P_max, power_to_weight)
 # ╟─413fb4e9-13de-4554-9d81-0fd9e6de3f4d
 # ╟─0a8f49c3-b44e-4822-ab89-987c4fcb0f3b
 # ╟─ec7818b4-8b15-4d1f-a0e8-8be51ad67be2
-# ╠═89970cdb-2fb1-445c-b075-6f78d9f57b21
+# ╟─89970cdb-2fb1-445c-b075-6f78d9f57b21
 # ╟─4a671fc1-c2e6-4c24-b8d0-612cdb1acdf2
 # ╟─ad1c351a-81df-46de-9fa7-f17802977c0f
 # ╟─f0fc5885-dae8-492d-b12d-3358cbd1b41b
-# ╠═658233d5-c8e9-4ff1-ab8a-83f4ae89c8cb
+# ╟─658233d5-c8e9-4ff1-ab8a-83f4ae89c8cb
 # ╟─92b88309-8f6f-443d-a314-bb91807ad0db
 # ╟─532c3f84-7bc5-4f1d-b7ff-6436102a6794
 # ╟─0528db34-6696-4f45-95c8-ce699168741b
-# ╠═f2533010-84d9-476f-af78-8113d363ec53
+# ╟─f2533010-84d9-476f-af78-8113d363ec53
 # ╟─d5613d7e-0eae-481c-8939-139d864715bf
 # ╟─6026bd7e-dc5f-4e2c-b30a-63c6133de986
 # ╟─6638f5a6-b243-42c7-b0d6-fe30b1a2f1f1

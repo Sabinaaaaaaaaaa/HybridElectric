@@ -26,25 +26,35 @@ packspecificenergy(specificenergy, packagingfactor)= specificenergy * packagingf
 function battery(name) #user selects battery from dropdown menu
     filepath = joinpath(@__DIR__, "batteries", "$name.txt")  
     data = readlines(filepath)
-    
-    usage = data[2]
-    company = data[3]
-    nominalvoltage= data[4]
-    outputcurrent= data[5]
-    amperehourcapacity= data[6]
-    energystoragecapacity= data[7]
-    weight= data[8]
-    volume= data[9]
-    height= data[10]
-    width= data[11]
-    depth= data[12]
-    radius= data[13]
-    cell_energy_density= data[14]
-    cell_specific_energy= data[15]
-    specific_power= data[16]
-    max_voltage= data[17]
-    min_voltage= data[18]
-    continuous_discharge_rate= data[19]
-    continuous_charge_rate= data[20]
+
+    usage   = strip(data[2])
+    company = strip(data[3])
+
+    function fparse(x)
+        if x==""
+            return 0.0
+        else
+            strip(x)
+            return parse(Float64, x)
+        end
+    end
+
+    nominalvoltage              = fparse(data[4])
+    outputcurrent               = fparse(data[5])
+    amperehourcapacity          = fparse(data[6])
+    energystoragecapacity       = fparse(data[7])
+    weight                      = fparse(data[8])
+    volume                      = fparse(data[9])
+    height                      = fparse(data[10])
+    width                       = fparse(data[11])
+    depth                       = fparse(data[12])
+    radius                      = fparse(data[13])
+    cell_energy_density         = fparse(data[14])
+    cell_specific_energy        = fparse(data[15])
+    specific_power              = fparse(data[16])
+    max_voltage                 = fparse(data[17])
+    min_voltage                 = fparse(data[18])
+    continuous_discharge_rate   = fparse(data[19])
+    continuous_charge_rate      = fparse(data[20])
     return (usage=usage, company=company, nominalvoltage=nominalvoltage, outputcurrent=outputcurrent, amperehourcapacity=amperehourcapacity, energystoragecapacity=energystoragecapacity, weight=weight, volume=volume, height=height, width=width, depth=depth, radius=radius, cell_energy_density=cell_energy_density, cell_specific_energy=cell_specific_energy, specific_power=specific_power, max_voltage=max_voltage, min_voltage=min_voltage, continuous_discharge_rate=continuous_discharge_rate, continuous_charge_rate=continuous_charge_rate) 
 end
