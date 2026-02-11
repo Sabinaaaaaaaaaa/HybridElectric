@@ -1,0 +1,20 @@
+Model 9553LV Aerospace Battery
+Boeing Advanced Technology Vehicle X-37
+Lithion
+28.8
+86
+43
+1238.4
+13.51473923
+0.013805146
+0.306578613
+0.148844298
+0.302514605
+
+237000
+102
+
+
+
+
+

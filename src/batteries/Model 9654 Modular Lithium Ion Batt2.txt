@@ -1,0 +1,20 @@
+Model 9654 Modular Lithium Ion Battery	
+UUV Applications	
+Lithion	
+3.6	
+120	
+350	
+1260	
+130.6122449
+	
+0.391668783
+0.382270765
+0.444500889
+	
+0
+212	
+	
+	
+	
+	
+	

@@ -18,7 +18,7 @@ end
 struct Propulsion
     η_motor::Float64                          # Motor Efficiency
     η_controller::Float64                     # Controller Efficiency
-    η_battery::Float64                      # Battery Efficiency
+    η_battery::Float64                        # Battery Efficiency
     specificenergy::Float64                   # Battery Specific Energy [Wh/kg]
     SOC_min::Float64                          # Minimum State of Charge
     SFC::Float64                              # Specific Fuel Consumption [kg/(kW·h)]

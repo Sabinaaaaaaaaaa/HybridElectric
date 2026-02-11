@@ -1,0 +1,20 @@
+Model 9654 Modular Lithium Ion Battery	
+Submersible 
+Lithion	
+3.6	
+120	
+350	
+1260	
+65.30612245
+	
+0.391668783	
+0.193548387	
+0.444500889
+	
+417000
+212	
+	
+	
+	
+	
+	

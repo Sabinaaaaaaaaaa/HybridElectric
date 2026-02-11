@@ -1,0 +1,20 @@
+Model L1147 Aerospace Battery
+Orbital Express Astro and NexSAT Qualification and Production Programs
+Lithion
+28.8
+40
+43
+1238.4
+13.60544218
+0.007267617
+0.237490475
+0.302514605
+0.148844298
+
+340000
+142
+
+
+
+
+

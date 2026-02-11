@@ -20,3 +20,31 @@ total_battery_energycapacity(W_battery, specificenergy) = W_battery * specificen
 
 
 component_weight(P_max, power_to_weight)= P_max / power_to_weight
+
+packspecificenergy(specificenergy, packagingfactor)= specificenergy * packagingfactor
+
+function battery(name) #user selects battery from dropdown menu
+    filepath = joinpath(@__DIR__, "batteries", "$name.txt")  
+    data = readlines(filepath)
+    
+    usage = data[2]
+    company = data[3]
+    nominalvoltage= data[4]
+    outputcurrent= data[5]
+    amperehourcapacity= data[6]
+    energystoragecapacity= data[7]
+    weight= data[8]
+    volume= data[9]
+    height= data[10]
+    width= data[11]
+    depth= data[12]
+    radius= data[13]
+    cell_energy_density= data[14]
+    cell_specific_energy= data[15]
+    specific_power= data[16]
+    max_voltage= data[17]
+    min_voltage= data[18]
+    continuous_discharge_rate= data[19]
+    continuous_charge_rate= data[20]
+    return (usage=usage, company=company, nominalvoltage=nominalvoltage, outputcurrent=outputcurrent, amperehourcapacity=amperehourcapacity, energystoragecapacity=energystoragecapacity, weight=weight, volume=volume, height=height, width=width, depth=depth, radius=radius, cell_energy_density=cell_energy_density, cell_specific_energy=cell_specific_energy, specific_power=specific_power, max_voltage=max_voltage, min_voltage=min_voltage, continuous_discharge_rate=continuous_discharge_rate, continuous_charge_rate=continuous_charge_rate) 
+end
