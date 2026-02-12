@@ -29,7 +29,7 @@ export BEMT
 
 #==========================================================================================#
 include("mission.jl")
-export runmission
+export runmission, batteryandfuelsizing
 
 #==========================================================================================#
 include("fuelpropulsion.jl") 

@@ -8,7 +8,7 @@
 # 6. Return new state
 
 #initialise the state 
-function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g, η)
+function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g, η, μ, LD_takeoff)
     #this state describes the cumulative effect of each state on the TIME, SOC, W_fuel, W_total 
     state = MissionState(
         0.0,
@@ -41,7 +41,12 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
 
             #ELECTRICAL INTEGRATION PART
             #calculate power required with the current weight estimate at this flight stage
-            P_req=powerrequired(drag, segment.V, weight, segment.load*g, segment.dVdt, segment.ROC)/η 
+
+            if segment.name=="takeoff"
+                P_req=takeoffpowerrequired(weight, segment.load*g, segment.V, μ, segment.dVdt, LD_takeoff)/η
+            else
+                P_req=powerrequired(drag, segment.V, weight, segment.load*g, segment.dVdt, segment.ROC)/η 
+            end
 
             #validation checks to see if engine is able to deliver this!
 
@@ -97,4 +102,38 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
     end
     #mission is complete!
     return true, state.SOC, batterydepleted, state.W_fuel
+end
+
+
+
+
+
+function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft, W_PGD, batt, g, η, μ, LD_takeoff)
+    W_batt = 0.0
+    W_f = 0.0
+    last_leftoverfuel = 0.0
+
+    fully_electric = all(seg -> seg.ϕ == 1, FULLMISSION)
+    for j in 1:Max_iterations
+        Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_batt, W_f, g, η, μ, LD_takeoff); 
+                
+        last_leftoverfuel = leftoverfuel
+        if Valid # if it meets the mission requirements 
+            if batterydepleted #but the battery is depleted
+                W_batt +=batt.weight; #increase the battery mass
+            else
+                break
+            end
+                    
+        else #not valid if it does not meet the mission requirements
+            if batterydepleted #if battery was depleted increase battery
+                W_batt +=batt.weight;
+            end
+            if (leftoverfuel <= 10) && !fully_electric #if fuel was depleted and it is not fully electric increase fuel
+                W_f += 2
+            end
+        end
+
+    end
+    return W_batt, W_f, last_leftoverfuel
 end
