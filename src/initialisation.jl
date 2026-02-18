@@ -3,13 +3,15 @@
 #define g in the Pluto notebook! multiply with the load
 #Aircraft Parameters
 struct Aircraft
-    MTOW::Float64          # Maximum Take-Off Weight [kg]
-    W_payload::Float64     # Payload Weight [kg]
-    W_empty::Float64       # Baseline Empty Weight [kg]
-    S::Float64             # Wing Area [m²]
-    AR::Float64            # Aspect Ratio
-    e::Float64             # Oswald Efficiency Factor
-    Cd0::Float64           # Zero-lift Drag Coefficient
+    MTOW::Float64               # Maximum Take-Off Weight [kg]
+    W_payload::Float64          # Payload Weight [kg]
+    W_empty::Float64            # Baseline Empty Weight [kg]
+    S::Float64                  # Wing Area [m²]
+    AR::Float64                 # Aspect Ratio
+    e::Float64                  # Oswald Efficiency Factor
+    Cd0::Float64                # Zero-lift Drag Coefficient
+    maxfuelweight::Float64      # Maximum Fuel Capacity [kg] 
+    maxbatteryvolume::Float64   # Maximum Battery Volume [m^3]
 end
 
 

@@ -8,7 +8,7 @@
 # 6. Return new state
 
 #initialise the state 
-function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_initial, g, η, μ, LD_takeoff)
+function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_fuel_initial, g, η, μ, LD_takeoff)
     #this state describes the cumulative effect of each state on the TIME, SOC, W_fuel, W_total 
     state = MissionState(
         0.0,
@@ -18,7 +18,9 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
     )
 
     #total amount of capacity that the battery can provide!
-    batterycapacity = total_battery_energycapacity(W_battery, Propulsion.specificenergy) 
+    batterycapacity = batt.energystoragecapacity * num_battery_packs #Wh
+    W_battery = batt.weight * num_battery_packs #kg
+    BatteryPowerRating=batt.maxcontinuouspower * num_battery_packs #W
 
     batterydepleted=false
     for segment in FULLMISSION #this iterates across the FULLMISSION ARRAY, each segment is a MissionSegment
@@ -48,22 +50,25 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
                 P_req=powerrequired(drag, segment.V, weight, segment.load*g, segment.dVdt, segment.ROC)/η 
             end
 
-            #validation checks to see if engine is able to deliver this!
 
             #power split
             P_EM_req, P_FB_req =powersplit(P_req, segment.ϕ)
 
-            if batterydepleted
-                P_FB_req += P_EM_req
-                P_EM_req = 0
-            end
 
+
+            #validation checks to see if engine is able to deliver this!
             if P_FB_req>Propulsion.P_max_engine 
-                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(Propulsion.P_max_engine ) W")
+                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(Propulsion.P_max_engine) W")
                 return false, state.SOC, batterydepleted, state.W_fuel
             end
 
+            if P_EM_req>BatteryPowerRating
+                println("Power EM required exceeds maximum available power at time $(state.time) seconds. Required: $(P_EM_req) W, Available: $(BatteryPowerRating) W")
+                return false, state.SOC, batterydepleted, state.W_fuel
+            end
             
+
+
             #update State Of Charge SOC
             if P_EM_req > 0
                 P_battery = batterypower(P_EM_req, Propulsion.η_motor, Propulsion.η_controller, Propulsion.η_battery)
@@ -71,17 +76,15 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_battery, W_fuel_
 
                 #check if battery is depleted
                 if SOC_new < Propulsion.SOC_min
-                    println("Battery depleted during mission segment after $(state.time) seconds! SOC dropped below 20%, need to increase battery size. Switching additional load to fuel-based propulsion.")
-                    P_FB_req += P_EM_req  
-                    P_EM_req = 0
+                    println("Battery depleted during mission segment after $(state.time) seconds! SOC dropped below 20%.")
                     batterydepleted=true
                     # Don't update SOC below minimum
+                    return false, state.SOC, batterydepleted, state.W_fuel
                 else
                     state.SOC = SOC_new
                 end 
-    
-                
             end
+
 
 
             #FUEL INTEGRATION PART
@@ -112,28 +115,45 @@ function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft,
     W_batt = 0.0
     W_f = 0.0
     last_leftoverfuel = 0.0
+    num_battery_packs = 0.0 #number of battery packs
 
     fully_electric = all(seg -> seg.ϕ == 1, FULLMISSION)
+
+    #volume constraints 
+    FuelMax=Aircraft.maxfuelweight           # Maximum Fuel Capacity [kg] 
+    BattVolumeMax=Aircraft.maxbatteryvolume  # Maximum Battery Volume [m^3]
+
     for j in 1:Max_iterations
-        Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, W_batt, W_f, g, η, μ, LD_takeoff); 
+        VolumeBatt=batt.volume * num_battery_packs
+        if VolumeBatt > BattVolumeMax
+            println("Battery volume exceeds maximum limit of $(BattVolumeMax) m^3. Cannot add more battery packs.")
+            break
+        end
+
+        if W_f > FuelMax
+            println("Fuel weight exceeds maximum limit of $(FuelMax) kg. Cannot add more fuel.")
+            break   
+        end
+
+        Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_f, g, η, μ, LD_takeoff); 
                 
         last_leftoverfuel = leftoverfuel
-        if Valid # if it meets the mission requirements 
-            if batterydepleted #but the battery is depleted
-                W_batt +=batt.weight; #increase the battery mass
-            else
-                break
-            end
-                    
-        else #not valid if it does not meet the mission requirements
+                            
+        if !Valid #not valid if it does not meet the mission requirements
             if batterydepleted #if battery was depleted increase battery
                 W_batt +=batt.weight;
+                num_battery_packs+=1
             end
             if (leftoverfuel <= 10) && !fully_electric #if fuel was depleted and it is not fully electric increase fuel
                 W_f += 2
             end
         end
 
+        if Valid #if it is valid, we can stop iterating
+            println("Mission requirements met with $(num_battery_packs) battery packs, Battery Weight: $(round(W_batt,digits=2)) kg, Fuel Weight: $(round(W_f,digits=2)) kg")
+            break
+        end 
+
     end
-    return W_batt, W_f, last_leftoverfuel
+    return num_battery_packs, W_batt, W_f, last_leftoverfuel
 end
