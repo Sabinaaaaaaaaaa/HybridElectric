@@ -41,6 +41,6 @@ export powersplit, powerrequired, takeoffpowerrequired
 
 #==========================================================================================#
 include("performance.jl")
-export Range_parallel, Range_series
+export Range_parallel, Range_series, weight_iteration, PayloadRange, P_W
 
 end

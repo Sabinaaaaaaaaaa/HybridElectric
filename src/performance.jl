@@ -62,7 +62,107 @@ function Range_series(Aircraft, Propulsion, E_0total, ϕ, LD, g; e_batt_Whkg = P
      return Range
  end
 
+function weight_iteration(A, C, W_payload, Wf_W0, W0_guess)
+		iterations = Int[]
+		weights = Float64[]
+		NumIterations=0
+		tol=1e-3
+		while true
+			We_W0=A*(W0_guess* 2.205)^(C) #need to convert to lbs for this correlation
+			den = 1 - Wf_W0 - We_W0
+	        if den <= 0
+	            error("Invalid weight fractions")
+				break
+	        end
+			W0=W_payload / den
+			NumIterations+=1
+			push!(iterations, NumIterations)
+	    	push!(weights, W0)
+			if abs(W0_guess - W0) < tol || NumIterations>=100
+				break
+			end
+			W0_guess=W0
+		end
+		return W0_guess, weights, iterations
+end
 
+
+
+function PayloadRange(Aircraft, Propulsion,g,cp_cruise, L_D_cruise; Wf= 0)
+		W_payload=Aircraft.W_payload
+		W0=Aircraft.MTOW
+		We=Aircraft.W_empty
+		η_p=Propulsion.η_propulsive_efficiency 
+		W_fuel_max=Aircraft.maxfuelweight
+		
+	    #POINT A
+	    R_A = 0.0
+	    Wpl_A = W_payload  #kg
+	
+	    #POINT B
+	    Wf_B = W0 - We - W_payload  #fuel available at max payload
+		if Wf!=0
+			Wf_B=Wf
+		end
+	    WB_i = W0
+	    WB_f = W0 - Wf_B
+	    R_B = (η_p/(cp_cruise*g)) * L_D_cruise * log(WB_i / WB_f)/1000
+	    Wpl_B = W_payload 
+	
+	    #POINT C
+	    Wf_C = W_fuel_max
+	    Wpl_C = (W0 - We - Wf_C) #remaining payload at max fuel
+	    WC_i = W0
+	    WC_f = W0 - Wf_C
+	    R_C = (η_p/(cp_cruise*g)) * L_D_cruise * log(WC_i / WC_f)/1000
+	
+	    # POINT D
+	    W0_D = We + W_fuel_max  #W0 shrinks, no payload
+	    WD_i = W0_D
+	    WD_f = W0_D - W_fuel_max
+	    R_D = (η_p/(cp_cruise*g)) * L_D_cruise * log(WD_i / WD_f)/1000
+	    Wpl_D = 0.0
+	
+	    ranges_pts   = [R_A,   R_B,   R_C,   R_D]
+	    payloads_pts = [Wpl_A,      Wpl_B,      Wpl_C,      Wpl_D]
+		return  ranges_pts, payloads_pts
+
+end
+
+
+function P_W(W_S, α, β, Segment, Propulsion, Aircraft; constraint="empty", altitude=0)
+		CD_0=Aircraft.Cd0
+		AR=Aircraft.AR
+		e=Aircraft.e
+		V = Segment.V
+    	ρ = Segment.ρ
+		η_p = Propulsion.η_propulsive_efficiency 
+		ROC=Segment.ROC
+		G=ROC/V
+		dV_dt=Segment.dVdt
+	    CL = α .* W_S ./ (0.5 * ρ * V^2)
+		
+		if constraint == "empty"
+			if Segment.name=="Cruise"
+				P_W = (V * α)/(η_p * β) .* (CD_0 ./ (α .* CL) .+ (α .* CL)./(π * AR * e));
+			elseif Segment.name == "Climb"
+				P_W = (V * α)/(η_p * β) .* (G .+ CD_0 ./ (α .* CL) .+ (α .* CL)./(π * AR * e));
+			else
+				P_W = (V/η_p).*(α/β) .* ( G .+ (1/g)*dV_dt .+ (0.5 .* ρ .* V^2 .* CD_0) ./ (α .* W_S) .+ (n^2 .* W_S) ./ (0.5 .* ρ .* V^2 .* π .* AR .* e) )
+			end
+		end
+
+		if constraint == "ceiling"
+			-,-,ρ_ceiling=atmosphere(altitude)
+			σ_ceil = ρ_ceiling / 1.225
+			P_W = (α/β) * (2/η_p) * sqrt(CD_0/(π*AR*e)) / σ_ceil^0.7
+			
+		end
+		
+		return P_W
+	    
+		
+end
 
  #coding notes
 #  function Range_parallel(ac::Aircraft, pr::Propulsion, E0, ϕ;
