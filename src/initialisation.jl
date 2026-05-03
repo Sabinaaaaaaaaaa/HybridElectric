@@ -53,8 +53,8 @@ end
 
 
 mutable struct MissionState
-    time::Float64
-    SOC::Float64
-    W_fuel::Float64
-    W_total::Float64                
+    time::Float64              #time [s]
+    SOC::Float64               #State of Charge of the battery 
+    W_fuel::Float64            #Fuel weight [kg]
+    W_total::Float64           #Total weight of the aircraft [kg]     
 end

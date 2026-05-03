@@ -100,7 +100,7 @@ The typical usage will be particularly useful for GPB and VPB when calculating t
 """
 
 # ╔═╡ 6909eef8-8930-40d5-a112-8517ed91fce8
-@bind batteryselection Select(["Model 9952 Aerospace Battery", "MER Battery Development", "Model 9422 Aircraft battery", "Model 9654 Modular Lithium Ion Batt", "Model 9654 Modular Lithium Ion Batt2", "Model 9553LV Aerospace Battery", "Model 9553HV Aerospace Battery", 	"Model 9492 Aerospace Battery", "Model L1147 Aerospace Battery", "Model L1147 Aerospace Battery2", "Model 9535 Small-Profile Modular UU",	"US18650VTC6", "SLPB065070180", "IMR18650", "POA000343", "Glide", "POA000412", "MODEL INR-21700-M50A", "INR18650-30Q", "BYD Blade Battery Cell"])
+@bind batteryselection Select(["PB345V124E-L"])
 
 
 # ╔═╡ 07f2b3e8-11f0-4aef-946a-9aaead57befb
@@ -112,25 +112,12 @@ md"""
 
 | Parameter     			| Value   | Units| 
 | ----- 					| ---- 	            |----|
-| Typical usage 			| $(batt.usage)                     |N/a|
-| Company 					| $(batt.company)                   |N/a|
-| Nominal output voltage    | $(batt.nominalvoltage)            |V|
-| Continuous output current | $(batt.outputcurrent)             |max A|
-| Ampere-hour capacity      | $(batt.amperehourcapacity)        |Ah|
-| Energy Storage Capacity   | $(batt.energystoragecapacity)     |Wh|
-| Weight 					| $(batt.weight)                    |kg|
-| Volume 					| $(batt.volume)                    |m^2|
-| Height 					| $(batt.height)                    |m|
-| Width 					| $(batt.width)                     |m|
-| Depth 					| $(batt.depth)                     |m|
-| Radius if cylindrical     | $(batt.radius)                    |m|
-| Cell-level energy density | $(batt.cell_energy_density)       |Wh/m^3|
-| Cell-level specific energy| $(batt.cell_specific_energy)      |Wh/kg|
-| Specific power 			| $(batt.specific_power)            |W/kg|
-| Maximum voltage 			| $(batt.max_voltage)               |V|
-| Minimum voltage 			| $(batt.min_voltage)               |V|
-| Continuous discharge rate | $(batt.continuous_discharge_rate) |C-rate|
-| Continuous charge rate    | $(batt.continuous_charge_rate)    |C-rate|
+| Maximum Continuous Power 			| $(batt.maxcontinuouspower)                     |W|
+| Energy Storage Capacity 					| $(batt.energystoragecapacity)                   |Wh|
+| Pack Specific Energy    | $(batt.packspecificenergy)            |Wh/kg|
+| Weight | $(batt.weight)             |kg|
+| Volume      | $(batt.volume)        |m^3|
+| Nominal Voltage   | $(batt.nominalvoltage)     |V|
 
 """
 
@@ -140,6 +127,18 @@ md"""
 # ╔═╡ e4ac0d48-6f8e-414b-af94-bdbba09e41f8
 md"### Define Inputs: Dornier 328 Example"
 
+# ╔═╡ 5a340bcc-74bf-4761-a792-794b2f993c9f
+# ╠═╡ disabled = true
+#=╠═╡
+md"""
+MTOW
+$(@bind MTOW Slider(5000.0:20000.0, default=13990.0, show_value=true)) kg
+"""
+  ╠═╡ =#
+
+# ╔═╡ 703b5256-ae37-4e51-b9ea-e62530d89f8e
+MTOW=13990.0
+
 # ╔═╡ 566dba61-de02-42b2-9da5-50b9376d87d5
 begin
 	W_payload = 3671.0;
@@ -148,41 +147,22 @@ begin
     AR  = 11.0;
     e   = 0.80;
     Cd0 = 0.0220;
+	maxfuelweight = 3633.72848
+	#cabin area: 42.5m^3
+	#cargo volume: 7.8m^3 
+	#assume battery volume is half the cargo volume
+	maxbatteryvolume = 7.8/2
 end;
 
 # ╔═╡ d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
-#=╠═╡
-aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0)
-  ╠═╡ =#
-
-# ╔═╡ f2e53147-8511-48f1-9823-3ee59a823c9c
-md"### packspecificenergy" 
-
-# ╔═╡ 5df455f6-db1c-46b6-badc-09a8e435557e
-md"""
-This function is used to compute the pack specific energy [Wh/kg]. The sizing methodology already enforces SOC minimum and efficiencies so the pack specific energy is given by
-
-$e_{pack} ≈ e_{cell}f$ 
-
-where $f$ is the packaging factor defined as the cell mass fraction of the pack; how much space the cell takes. The rest of the space is allocated for thermal management and wiring. This packaging factor is dependent on the type of battery selected.
-
-"""
-
-# ╔═╡ 7c93552c-f98c-44c0-9b8a-d4e5198bcd0c
-begin
-	cellspecificenergy=250
-	packagingfactor=0.855
-end;
-
-# ╔═╡ 54058d4e-43e3-4c81-9b1a-2f21678abf98
-specific_energy=packspecificenergy(cellspecificenergy, packagingfactor)
+aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight, maxbatteryvolume)
 
 # ╔═╡ a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
 begin
 	η_motor                    		= 0.95 #95-97% efficiency   
 	η_controller               		= 0.96
 	η_battery                  		= 0.95
-	specificenergy             		= specific_energy
+	specificenergy                  =batt.packspecificenergy
 	SOC_min                    		= 0.2
 	SFC                        		= 0.332
 	power_to_weight_motor      		= 5200
@@ -247,9 +227,7 @@ g=9.81
 md"$D = \frac{1}{2} ρ V^2 S C_d$"
 
 # ╔═╡ cfdab272-c3b0-411d-b85a-8f03ac6f4939
-#=╠═╡
 D = dragforce(aircraft, MTOW, g, CRUISE)
-  ╠═╡ =#
 
 # ╔═╡ 24a979f9-7932-4f7d-8459-6ba43f8591a7
 md"**Verification**"
@@ -258,29 +236,19 @@ md"**Verification**"
 q=0.5*(CRUISE.ρ)*(CRUISE.V^2)
 
 # ╔═╡ 2a408a96-5684-4cc6-8d0c-ea585ede7748
-#=╠═╡
 K=1/(π*aircraft.e*aircraft.AR)
-  ╠═╡ =#
 
 # ╔═╡ 6e59cd33-3343-4897-9a5b-bad08ab0859d
-#=╠═╡
 W=MTOW
-  ╠═╡ =#
 
 # ╔═╡ f1442b85-e9e6-4289-b730-86faa34e92ce
-#=╠═╡
 Cl=W*g/(q*aircraft.S)
-  ╠═╡ =#
 
 # ╔═╡ a41c320e-fc5b-4893-be41-5ab879d960ca
-#=╠═╡
 Cd  = aircraft.Cd0 + K*Cl^2 #drag coefficient
-  ╠═╡ =#
 
 # ╔═╡ 0190530c-dd77-43f6-bbdd-b824020079ec
-#=╠═╡
 Drag=0.5*(CRUISE.ρ)*(CRUISE.V^2)*aircraft.S*Cd
-  ╠═╡ =#
 
 # ╔═╡ 9de0bc16-ad1f-42ea-a013-a419e116ba24
 
@@ -355,24 +323,16 @@ Potential component: $P_{potential} = W g ROC)$
 "
 
 # ╔═╡ f350490b-f639-4b41-9c70-2fb91efabbb1
-#=╠═╡
 P_drag=D*CRUISE.V
-  ╠═╡ =#
 
 # ╔═╡ 738d5e91-e491-4cd4-a540-2e14ea72d08f
-#=╠═╡
 P_kinetic = (MTOW*CRUISE.V/g)*CRUISE.dVdt
-  ╠═╡ =#
 
 # ╔═╡ eae68a35-c100-4071-bcd0-a07865a6b3a9
-#=╠═╡
 P_potential=MTOW*g*CRUISE.ROC
-  ╠═╡ =#
 
 # ╔═╡ 59ba8a65-1971-46bf-8c30-177a089c24a8
-#=╠═╡
 P_total_req = powerrequired(D, CRUISE.V, MTOW, g, CRUISE.dVdt, CRUISE.ROC) 
-  ╠═╡ =#
 
 # ╔═╡ 16d236e7-6580-4308-a81a-c219908890e9
 md"
@@ -397,15 +357,19 @@ $P_{takeoff} = m g \left(  μ \left[  1 - \left( \frac{v}{v_{takeoff}}   \right)
 A constant velocity was used during this period. $V=0.7V_{takeoff}$.
 """
 
+# ╔═╡ ff19118c-8cc6-410d-b4e1-c25a60f6879a
+begin
+	Vtakeoff= 70 
+	μ = 0.02
+	LD=10
+	runwaydistance=1000
+end
+
 # ╔═╡ c546b490-f38c-4ee4-bd0c-9f196bb718d0
-#=╠═╡
 takeoff = MissionSegment("Takeoff", h, Vtakeoff, Vtakeoff/1000, ROC, ϕ, load, 2, 1.225)
-  ╠═╡ =#
 
 # ╔═╡ 129ffe98-1444-43c2-b115-9335fed08816
-#=╠═╡
 Powerreq=takeoffpowerrequired(MTOW,g, takeoff.V, μ, takeoff.dVdt, LD)
-  ╠═╡ =#
 
 # ╔═╡ 03818506-af7e-4151-96e8-4b6b38248d19
 
@@ -428,19 +392,13 @@ The units are the same units that the input $P_{total_{req}}$ is defined as. Thi
 "
 
 # ╔═╡ e20e4f87-a763-47d6-b252-7e073b1e717e
-#=╠═╡
 P_EM_req, P_FB_req = powersplit(P_total_req, ϕ) 
-  ╠═╡ =#
 
 # ╔═╡ 20df341b-33e0-4460-8607-e40d606fbef4
-#=╠═╡
 P_EM_req0, P_FB_req0 = powersplit(P_total_req, 0) 
-  ╠═╡ =#
 
 # ╔═╡ 29356dd2-61d4-4d99-a69f-1e7466398143
-#=╠═╡
 P_EM_req1, P_FB_req1 = powersplit(P_total_req, 1) 
-  ╠═╡ =#
 
 # ╔═╡ 413fb4e9-13de-4554-9d81-0fd9e6de3f4d
 
@@ -566,7 +524,7 @@ These are simple sizing equations used at the initial sizing stage.
 W_battery=1000
 
 # ╔═╡ a449e644-8188-450c-9d4a-fb81cd2e1d82
-E_bat = total_battery_energycapacity(W_battery, specificenergy)
+E_bat = batt.energystoragecapacity
 
 # ╔═╡ d90b32c1-a7eb-4732-b8e3-d357a00984a6
 begin
@@ -574,35 +532,8 @@ begin
 	power_to_weight=10.0
 end;
 
-# ╔═╡ 5a340bcc-74bf-4761-a792-794b2f993c9f
-# ╠═╡ disabled = true
-#=╠═╡
-md"""
-MTOW
-$(@bind MTOW Slider(5000.0:20000.0, default=13990.0, show_value=true)) kg
-"""
-  ╠═╡ =#
-
-# ╔═╡ 703b5256-ae37-4e51-b9ea-e62530d89f8e
-#=╠═╡
-MTOW=13990.0
-  ╠═╡ =#
-
 # ╔═╡ 60530e30-e409-4b64-b41a-28527390d864
-#=╠═╡
 Weight = component_weight(P_max, power_to_weight)
-  ╠═╡ =#
-
-# ╔═╡ ff19118c-8cc6-410d-b4e1-c25a60f6879a
-#=╠═╡
-begin
-	Vtakeoff= 70 
-	μ = 0.02
-	LD=10
-	Weight=MTOW
-	runwaydistance=1000
-end
-  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╟─b2afe8b0-d096-11f0-af04-7574eb00a750
@@ -622,10 +553,6 @@ end
 # ╠═703b5256-ae37-4e51-b9ea-e62530d89f8e
 # ╠═566dba61-de02-42b2-9da5-50b9376d87d5
 # ╟─d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
-# ╟─f2e53147-8511-48f1-9823-3ee59a823c9c
-# ╟─5df455f6-db1c-46b6-badc-09a8e435557e
-# ╠═7c93552c-f98c-44c0-9b8a-d4e5198bcd0c
-# ╠═54058d4e-43e3-4c81-9b1a-2f21678abf98
 # ╠═a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
 # ╟─dbc78b24-e597-47b0-95ef-c8aa5cdb7a81
 # ╠═be304f17-40e9-447b-a9dc-592a05a3fd47

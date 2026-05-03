@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -16,19 +16,12 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ f858e0ae-496c-4dcb-a997-e77cb4a48684
+# ╔═╡ 76d3de73-2f2f-4e8b-99d7-a5a3bb22d4ba
 # ╠═╡ show_logs = false
-begin
-	using Pkg
-	using Plots
-    using PlutoUI
-    import PlutoUI: Slider, NumberField, TextField, CheckBox
-	Pkg.add("Revise")
-	Pkg.develop(path="C:\\Users\\sabin\\OneDrive\\Desktop\\FYP\\HybridElectric")
-	using HybridElectric
-	using AeroFuse
-	TableOfContents()
-end
+# ╠═╡ disabled = true
+#=╠═╡
+Pkg.add("PlutoUI")
+  ╠═╡ =#
 
 # ╔═╡ 4cbf94c2-ca00-11f0-8184-432af9656ff0
 md"# Hybrid Electric Aircraft Demo (Inputs)"
@@ -46,19 +39,6 @@ This Inputs demo shows how to define the following features for interactive para
 
 # ╔═╡ c2096e9e-10f6-4f77-90e5-7fe4c54db946
 	md"**Define Packages**"
-
-# ╔═╡ 9e98e3c8-cb09-4242-baaf-a299bc914f1f
-# ╠═╡ disabled = true
-#=╠═╡
-import Pkg
-  ╠═╡ =#
-
-# ╔═╡ 76d3de73-2f2f-4e8b-99d7-a5a3bb22d4ba
-# ╠═╡ show_logs = false
-# ╠═╡ disabled = true
-#=╠═╡
-Pkg.add("PlutoUI")
-  ╠═╡ =#
 
 # ╔═╡ 10f15af1-af71-4298-8597-c89831ae5fd5
 
@@ -106,6 +86,8 @@ begin
     AR  = 11.0;
     e   = 0.80;
     Cd0 = 0.0220;
+	maxfuelweight = 200
+	maxbatteryvolume = 1000
 end;
 
 # ╔═╡ 35edb82f-b24a-44ca-a003-01d1230f9334
@@ -119,10 +101,12 @@ md"""
 **AR** 		  = $(AR)  
 **e** 		  = $(e)  
 **Cd₀** 	  = $(Cd0)
+**maxfuelweight** = $(maxfuelweight) kg 
+**maxbatteryvolume** = $(maxbatteryvolume) m^3
 """
 
 # ╔═╡ 52b8acb8-c193-4ffe-91a1-b836ff80808c
-aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0)#remember to remove this after the update!
+aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight, maxbatteryvolume)#remember to remove this after the update!
 
 # ╔═╡ 6edd7a19-d21c-4c00-bf75-19a46d90ce42
 
@@ -454,6 +438,28 @@ md"""
 
 # ╔═╡ 6a2a83e5-ca37-4f18-aea8-425ab528bf83
 CRUISE = MissionSegment(name, h, V, duration, ROC, ϕ, load, dVdt, ρ)
+
+# ╔═╡ 9e98e3c8-cb09-4242-baaf-a299bc914f1f
+# ╠═╡ disabled = true
+#=╠═╡
+import Pkg
+  ╠═╡ =#
+
+# ╔═╡ f858e0ae-496c-4dcb-a997-e77cb4a48684
+# ╠═╡ show_logs = false
+#=╠═╡
+begin
+	using Pkg
+	using Plots
+    using PlutoUI
+    import PlutoUI: Slider, NumberField, TextField, CheckBox
+	Pkg.add("Revise")
+	Pkg.develop(path="C:\\Users\\sabin\\OneDrive\\Desktop\\FYP\\HybridElectric")
+	using HybridElectric
+	using AeroFuse
+	TableOfContents()
+end
+  ╠═╡ =#
 
 # ╔═╡ Cell order:
 # ╟─4cbf94c2-ca00-11f0-8184-432af9656ff0

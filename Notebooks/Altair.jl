@@ -54,44 +54,28 @@ md"**Define Packages**"
 md"### Define Battery "
 
 # ╔═╡ 60b6bc84-abac-481d-b547-ac1d9c493ee2
-@bind batteryselection Select(["Model 9952 Aerospace Battery", "MER Battery Development", "Model 9422 Aircraft battery", "Model 9654 Modular Lithium Ion Batt", "Model 9654 Modular Lithium Ion Batt2", "Model 9553LV Aerospace Battery", "Model 9553HV Aerospace Battery", 	"Model 9492 Aerospace Battery", "Model L1147 Aerospace Battery", "Model L1147 Aerospace Battery2", "Model 9535 Small-Profile Modular UU",	"US18650VTC6", "SLPB065070180", "IMR18650", "POA000343", "Glide", "POA000412", "MODEL INR-21700-M50A", "INR18650-30Q", "BYD Blade Battery Cell"])
+@bind batteryselection Select(["PB345V124E-L"])
 
 # ╔═╡ 87f4784b-323f-47f7-843b-ebe2c247230f
 batt=battery(batteryselection)
 
 # ╔═╡ 7b2fcfee-edf0-4c79-928a-57fcfcb864c8
+# ╠═╡ disabled = true
+#=╠═╡
 md"""
 **$batteryselection** 
 
 | Parameter     			| Value   | Units| 
 | ----- 					| ---- 	            |----|
-| Typical usage 			| $(batt.usage)                     |N/a|
-| Company 					| $(batt.company)                   |N/a|
-| Nominal output voltage    | $(batt.nominalvoltage)            |V|
-| Continuous output current | $(batt.outputcurrent)             |max A|
-| Ampere-hour capacity      | $(batt.amperehourcapacity)        |Ah|
-| Energy Storage Capacity   | $(batt.energystoragecapacity)     |Wh|
-| Weight 					| $(batt.weight)                    |kg|
-| Volume 					| $(batt.volume)                    |m^2|
-| Height 					| $(batt.height)                    |m|
-| Width 					| $(batt.width)                     |m|
-| Depth 					| $(batt.depth)                     |m|
-| Radius if cylindrical     | $(batt.radius)                    |m|
-| Cell-level energy density | $(batt.cell_energy_density)       |Wh/m^3|
-| Cell-level specific energy| $(batt.cell_specific_energy)      |Wh/kg|
-| Specific power 			| $(batt.specific_power)            |W/kg|
-| Maximum voltage 			| $(batt.max_voltage)               |V|
-| Minimum voltage 			| $(batt.min_voltage)               |V|
-| Continuous discharge rate | $(batt.continuous_discharge_rate) |C-rate|
-| Continuous charge rate    | $(batt.continuous_charge_rate)    |C-rate|
+| Maximum Continuous Power 			| $(batt.maxcontinuouspower)                     |W|
+| Energy Storage Capacity 					| $(batt.energystoragecapacity)                   |Wh|
+| Pack Specific Energy    | $(batt.packspecificenergy)            |Wh/kg|
+| Weight | $(batt.weight)             |kg|
+| Volume      | $(batt.volume)        |m^3|
+| Nominal Voltage   | $(batt.nominalvoltage)     |V|
 
 """
-
-# ╔═╡ f00e2e47-d37a-4725-be70-a0e4cea3359b
-packagingfactor=0.855
-
-# ╔═╡ afb4ba00-115c-4a42-a2ca-d4366bbfe021
-specific_energy= packspecificenergy( (batt.cell_specific_energy) , packagingfactor)
+  ╠═╡ =#
 
 # ╔═╡ 20012e75-c631-47ea-b021-b0e4a0430ed4
 
@@ -101,17 +85,19 @@ md"### Define Aircraft Parameters"
 
 # ╔═╡ 0cf0ae61-1fc6-4b7e-8d09-95f0b33bf362
 begin
-	MTOW= 3268
-	W_payload = 299
-	W_empty = MTOW-W_payload
+	MTOW= 3175
+	W_payload = 340
+	W_empty = 1475
     S   = 29.24
     AR  = 23.5
     e   = 0.8
     Cd0 = 0.018
+	maxfuelweight = 1360.77
+	maxbatteryvolume = 2.71 
 end;
 
 # ╔═╡ 415043c5-d227-469a-8b73-bea59e3d6adb
-aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0)
+aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight, maxbatteryvolume)
 
 # ╔═╡ a6aecfef-c4ee-4fdd-a593-344209f5f5db
 begin
@@ -150,14 +136,16 @@ end;
 
 # ╔═╡ 04efbcfd-50b0-4cfb-ac84-71840620cc5b
 begin
-	name2           = "Takeoff"
+	name2           = "takeoff"
 	h2   			= 457.2
-	V2 				= (35+40)/2
+	V2 				= 40
 	duration2 		= 60
 	ROC2 			= 0
 	load2 			= 1
 	dVdt2 			= 0
 	T2, P2, ρ2  = atmosphere(h2);
+	μ=0.02
+	LD_takeoff=11
 end;
 
 # ╔═╡ 928b7621-f7e3-40d2-903b-b01b177f7b91
@@ -220,104 +208,27 @@ begin
 	T7, P7, ρ7  = atmosphere(h7);
 end;
 
+# ╔═╡ f656498f-5dd6-45fa-9bf7-0255856c7b34
+
+
+# ╔═╡ 04f5332d-8555-40ba-9c34-957fddb89034
+md"### Baseline Code"
+
+# ╔═╡ 734faa23-3471-491b-bf04-b4464e14fab6
+
+
 # ╔═╡ 3c66a4ae-e98f-47d3-9a2b-748d19e7a839
 md"## Variation of Specific Energy"
 
-# ╔═╡ bbdd793a-650c-4176-9c3d-86da99f56458
-# ╠═╡ disabled = true
-#=╠═╡
-#stuff that is constant/being kept the same
-begin
-	ϕ = 1
-	power_to_weight_motor      		= 5000
-	power_to_weight_controller 		= 2000
+# ╔═╡ 362f16ea-04d2-408d-b9a1-5327ff32bd96
 
-	TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ, load1, dVdt1, ρ1)
-	TAKEOFF = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ, load2, dVdt2, ρ2)
-	CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ, load3, dVdt3, ρ3)
-	CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ, load4, dVdt4, ρ4)
-	DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ, load5, dVdt5, ρ5)
-	LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ, load6, dVdt6, ρ6)
-	TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ, load7, dVdt7, ρ7)
-	
-	FULLMISSION=[TAXI, TAKEOFF, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
 
-	g=9.81
-	η=1
+# ╔═╡ 2e5cac5e-edd9-497b-b0e1-68607dfaf856
+md"## Variation of Hybridization Ratio ϕ"
 
-	W_battery_initial=0
-	W_fuel_initial = 0
-	Max_iterations=1000
-end;
-  ╠═╡ =#
-
-# ╔═╡ b2c282b2-7914-4c39-acc1-419f91282bbd
-# ╠═╡ disabled = true
-#=╠═╡
-#stuff that is being changed
-begin	
-	specificenergy = Base.range(0.0, 1000, length=121)
-	n = length(specificenergy)
-
-	propulsion = Vector{Any}(undef, n)  # or Vector{Propulsion}(undef, n)
-
-    W_motor      = zeros(n)
-    W_controller = zeros(n)
-    W_PGD        = zeros(n)
-    output       = Vector{Any}(undef, n)
-	
-	W_battery = zeros(n)
-    W_fuel    = zeros(n)
-	TotalWeight = zeros(n)
-	unusedfuel=zeros(n)
-	
-	
-	for i =1:length(specificenergy)
-		
-		propulsion[i] = Propulsion(η_motor, η_controller, η_battery, specificenergy[i], SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
-
-		
-		W_motor[i] = component_weight(propulsion[i].P_max_engine * ϕ, propulsion[i].power_to_weight_motor)
-        W_controller[i] = component_weight(propulsion[i].P_max_engine * ϕ / propulsion[i].η_motor,propulsion[i].power_to_weight_controller)
-        W_PGD[i] = W_motor[i] + W_controller[i]
-
-		
-        W_batt = W_battery_initial
-        W_f    = W_fuel_initial
-		last_leftoverfuel = NaN
-		
-		for j in 1:Max_iterations
-			Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion[i], aircraft, W_PGD[i], W_batt, W_f, g, η); 
-			
-			last_leftoverfuel = leftoverfuel
-			if Valid # if it meets the mission requirements 
-				if batterydepleted #but the battery is depleted
-						W_batt +=batt.weight; #increase the battery mass
-				else
-					break
-				end
-				
-			else #not valid if it does not meet the mission requirements
-				if batterydepleted #if battery was depleted increase battery
-						W_batt +=batt.weight;
-				end
-				if (leftoverfuel<=10) && (ϕ!=1) #if fuel was depleted and it is not fully electric increase fuel
-					W_f+=10;
-				end
-			end
-
-			
-		end
-		
-	    W_battery[i] = W_batt
-        W_fuel[i]    = W_f
-        output[i] = runmission(FULLMISSION, propulsion[i], aircraft, W_PGD[i], 	W_batt, W_f, g, η)
-		unusedfuel[i]=last_leftoverfuel
-		TotalWeight[i]=  W_fuel[i] + aircraft.W_empty + aircraft.W_payload + W_PGD[i] + W_battery[i] ;
-
-	end
-end
-  ╠═╡ =#
+# ╔═╡ 6156c4fb-73ba-4b9f-810e-9d61d58faa1c
+#md"## Variation of Controller P/W"
+md"## Variation of Electric Motor P/W"
 
 # ╔═╡ 97ff6cfe-bba1-4aaa-b01d-ca7f6a9ade2e
 # ╠═╡ disabled = true
@@ -330,9 +241,7 @@ begin
 		ylabel = "Weight (kg)",
 		label = "Battery Weight (kg)",
 		title = "ϕ = $(ϕ)",
-	    linewidth = 2,
-		xlims=(200,400),
-		ylims = (0, 2500) 
+	    linewidth = 2
 	)
 	plot!(specificenergy,
 	    W_fuel,
@@ -349,154 +258,8 @@ begin
 end
   ╠═╡ =#
 
-# ╔═╡ 61a2016a-2f21-450a-bd6a-2cae8eb93c49
-# ╠═╡ disabled = true
-#=╠═╡
-begin
-	plot(
-	    specificenergy,
-	    TotalWeight,
-	    xlabel = "Battery specific energy [Wh/kg]",
-	    ylabel = "Total Aircraft Weight [kg]",
-	    linewidth = 2,
-		xlims=(200,400)
-		ylims = (0, 4000) 
-	)
-
-end
-  ╠═╡ =#
-
-# ╔═╡ 492a4f53-f58e-497c-b9f0-bc1112140efc
-# ╠═╡ disabled = true
-#=╠═╡
-begin
-	for i =1:Max_iterations
-		Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion, aircraft, W_PGD, W_battery, W_fuel_initial, g, η); 
-		if Valid==false
-			if batterydepleted==true
-				W_battery=W_battery+500;
-			end
-			if leftoverfuel<=10
-				W_fuel_initial = W_fuel_initial+500;
-			end
-		else
-			break
-		end
-	end
-end
-  ╠═╡ =#
-
-# ╔═╡ 986bce6c-3ef0-42e2-8a80-1da7c9e79611
-# ╠═╡ disabled = true
-#=╠═╡
-begin 
-	println("battery weight: ", W_battery, "kg")
-	println("fuel weight: ", W_fuel_initial, "kg")
-	TotalWeight= W_fuel_initial + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery ;
-	println("Total aircraft weight: ", TotalWeight, "kg")
-	Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion, aircraft, W_PGD, W_battery, W_fuel_initial, g, η)
-end
-  ╠═╡ =#
-
-# ╔═╡ 4f8d879d-f479-4b1e-a662-a9f692681ad5
-# ╠═╡ disabled = true
-#=╠═╡
-md"
-Battery Mass = $W_battery kg
-Fuel Mass = $W_fuel_initial kg
-Aircraft Weight = $TotalWeight kg
-"
-  ╠═╡ =#
-
-# ╔═╡ 2e5cac5e-edd9-497b-b0e1-68607dfaf856
-md"## Variation of Hybridization Ratio ϕ"
-
-# ╔═╡ d008b166-0841-48b8-86ad-6478ed95be88
-#stuff that is constant/being kept the same
-begin
-	power_to_weight_motor      		= 5000
-	power_to_weight_controller 		= 2000
-	g=9.81
-	η=1
-
-	W_battery_initial=0
-	W_fuel_initial = 0
-	Max_iterations=1000
-	specificenergy=specific_energy
-
-	propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
-end;
-
-# ╔═╡ 783b2ab8-25bd-426e-868f-57ce6ae38873
-#stuff that is being changed
-begin	
-	ϕ = Base.range(0.0, 1.0, length=121)
-	n = length(ϕ)
-    W_motor      = zeros(n)
-    W_controller = zeros(n)
-    W_PGD        = zeros(n)
-    output       = Vector{Any}(undef, n)
-	
-	W_battery = zeros(n)
-    W_fuel    = zeros(n)
-	TotalWeight = zeros(n)
-	unusedfuel=zeros(n)
-	
-	
-	for i =1:n	
-		W_motor[i] = component_weight(propulsion.P_max_engine * ϕ[i], propulsion.power_to_weight_motor)
-        W_controller[i] = component_weight(propulsion.P_max_engine * ϕ[i] / propulsion.η_motor,propulsion.power_to_weight_controller)
-        W_PGD[i] = W_motor[i] + W_controller[i]
-
-		TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ[i], load1, dVdt1, ρ1)
-		TAKEOFF = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ[i], load2, dVdt2, ρ2)
-		CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ[i], load3, dVdt3, ρ3)
-		CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ[i], load4, dVdt4, ρ4)
-		DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ[i], load5, dVdt5, ρ5)
-		LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ[i], load6, dVdt6, ρ6)
-		TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ[i], load7, dVdt7, ρ7)
-	
-		FULLMISSION=[TAXI, TAKEOFF, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
-
-
-		
-        W_batt = W_battery_initial
-        W_f    = W_fuel_initial
-		last_leftoverfuel = NaN
-		
-		for j in 1:Max_iterations
-			Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion, aircraft, W_PGD[i], W_batt, W_f, g, η); 
-			
-			last_leftoverfuel = leftoverfuel
-			if Valid # if it meets the mission requirements 
-				if batterydepleted #but the battery is depleted
-						W_batt +=batt.weight; #increase the battery mass
-				else
-					break
-				end
-				
-			else #not valid if it does not meet the mission requirements
-				if batterydepleted #if battery was depleted increase battery
-						W_batt +=batt.weight;
-				end
-				if (leftoverfuel<=10) && (ϕ!=1) #if fuel was depleted and it is not fully electric increase fuel
-					W_f+=2;
-				end
-			end
-
-			
-		end
-		
-	    W_battery[i] = W_batt
-        W_fuel[i]    = W_f
-        output[i] = runmission(FULLMISSION, propulsion, aircraft, W_PGD[i], 	W_batt, W_f, g, η)
-		unusedfuel[i]=last_leftoverfuel
-		TotalWeight[i]=  W_fuel[i] + aircraft.W_empty + aircraft.W_payload + W_PGD[i] + W_battery[i] ;
-
-	end
-end
-
 # ╔═╡ 87520646-7ec2-4c50-b456-40922945fc13
+# ╠═╡ disabled = true
 #=╠═╡
 begin
 	plot(ϕ, W_battery,
@@ -520,6 +283,7 @@ end
   ╠═╡ =#
 
 # ╔═╡ 77cc9a93-a94f-419e-826b-739a0b64d245
+# ╠═╡ disabled = true
 #=╠═╡
 begin
 	plot(ϕ,	    TotalWeight,
@@ -533,109 +297,12 @@ begin
 end
   ╠═╡ =#
 
-# ╔═╡ 6156c4fb-73ba-4b9f-810e-9d61d58faa1c
-#md"## Variation of Controller P/W"
-md"## Variation of Electric Motor P/W"
-
-# ╔═╡ 5b48d066-26fa-484b-b749-8fc207f5867e
-# ╠═╡ disabled = true
-#=╠═╡
-#stuff that is constant/being kept the same
-begin
-	ϕ = 0.5 #0.3, 0.5, 0.9, 1
-	specificenergy=specific_energy
-	power_to_weight_motor       = 5000
-	#power_to_weight_controller 		= 2000
-
-	TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ, load1, dVdt1, ρ1)
-	TAKEOFF = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ, load2, dVdt2, ρ2)
-	CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ, load3, dVdt3, ρ3)
-	CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ, load4, dVdt4, ρ4)
-	DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ, load5, dVdt5, ρ5)
-	LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ, load6, dVdt6, ρ6)
-	TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ, load7, dVdt7, ρ7)
-	
-	FULLMISSION=[TAXI, TAKEOFF, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
-
-	g=9.81
-	η=1
-
-	W_battery_initial=0
-	W_fuel_initial = 0
-	Max_iterations=1000
-end;
-  ╠═╡ =#
-
-# ╔═╡ 2979e0b6-c4ef-4bf8-8561-7a3d27d088f1
-# ╠═╡ disabled = true
-#=╠═╡
-#stuff that is being changed
-begin	
-	#power_to_weight_motor      		= Base.range(2000, 7000, length=200)
-	power_to_weight_controller 		= Base.range(2000, 6000, length=200)
-	n = length(power_to_weight_controller)
-
-    output       = Vector{Any}(undef, n)
-	
-	W_battery = zeros(n)
-    W_fuel    = zeros(n)
-	TotalWeight = zeros(n)
-	unusedfuel=zeros(n)
-	
-	
-	for i =1:n
-		
-		propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller[i], W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
-
-		
-		W_motor = component_weight(propulsion.P_max_engine * ϕ, propulsion.power_to_weight_motor)
-        W_controller = component_weight(propulsion.P_max_engine * ϕ / propulsion.η_motor,propulsion.power_to_weight_controller)
-        W_PGD= W_motor + W_controller
-
-		
-        W_batt = W_battery_initial
-        W_f    = W_fuel_initial
-		last_leftoverfuel = NaN
-		
-		for j in 1:Max_iterations
-			Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion, aircraft, W_PGD, W_batt, W_f, g, η); 
-			
-			last_leftoverfuel = leftoverfuel
-			if Valid # if it meets the mission requirements 
-				if batterydepleted #but the battery is depleted
-						W_batt +=batt.weight; #increase the battery mass
-				else
-					break
-				end
-				
-			else #not valid if it does not meet the mission requirements
-				if batterydepleted #if battery was depleted increase battery
-						W_batt +=batt.weight;
-				end
-				if (leftoverfuel<=10) && (ϕ!=1) #if fuel was depleted and it is not fully electric increase fuel
-					W_f+=2;
-				end
-			end
-
-			
-		end
-		
-	    W_battery[i] = W_batt
-        W_fuel[i]    = W_f
-        output[i] = runmission(FULLMISSION, propulsion, aircraft, W_PGD, 	W_batt, W_f, g, η)
-		unusedfuel[i]=last_leftoverfuel
-		TotalWeight[i]=  W_fuel[i] + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery[i] ;
-
-	end
-end
-  ╠═╡ =#
-
 # ╔═╡ be028496-e829-4d2d-b6ae-468080731524
 # ╠═╡ disabled = true
 #=╠═╡
 begin
-	plot(power_to_weight_controller, W_battery,
-	    xlabel = "Controller P/W (W/kg)",
+	plot(power_to_weight_motor, W_battery,
+	    xlabel = "Motor P/W (W/kg)",
 		ylabel = "Weight (kg)",
 		label = "Battery Weight (kg)",
 	    linewidth = 2,
@@ -661,8 +328,8 @@ end
 # ╠═╡ disabled = true
 #=╠═╡
 begin
-	plot(power_to_weight_controller,	    TotalWeight, #power_to_weight_controller
-	    xlabel = "Controller P/W (W/kg)",
+	plot(power_to_weight_motor,	    TotalWeight, #power_to_weight_controller
+	    xlabel = "Motor P/W (W/kg)",
 	    ylabel = "Total Aircraft Weight (kg)",
 	    linewidth = 2,
 		legend=false,
@@ -670,6 +337,242 @@ begin
 		#ylims = (340, 370) 
 	)
 end
+  ╠═╡ =#
+
+# ╔═╡ 5b48d066-26fa-484b-b749-8fc207f5867e
+# ╠═╡ disabled = true
+#=╠═╡
+#stuff that is constant/being kept the same
+begin
+	ϕ = 0.5 #0.3, 0.5, 0.9, 
+	#power_to_weight_motor       = 5000
+	power_to_weight_controller 		= 2000
+
+	TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ, load1, dVdt1, ρ1)
+	takeoff = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ, load2, dVdt2, ρ2)
+	CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ, load3, dVdt3, ρ3)
+	CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ, load4, dVdt4, ρ4)
+	DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ, load5, dVdt5, ρ5)
+	LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ, load6, dVdt6, ρ6)
+	TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ, load7, dVdt7, ρ7)
+	
+	FULLMISSION=[TAXI, takeoff, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
+
+	g=9.81
+	η=1
+
+	Max_iterations=1000
+end;
+  ╠═╡ =#
+
+# ╔═╡ d008b166-0841-48b8-86ad-6478ed95be88
+# ╠═╡ disabled = true
+#=╠═╡
+#stuff that is constant/being kept the same
+begin
+	power_to_weight_motor      		= 5000
+	power_to_weight_controller 		= 2000
+	g=9.81
+	η=1
+
+	W_battery_initial=0
+	W_fuel_initial = 0
+	Max_iterations=1000
+
+	propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+end;
+  ╠═╡ =#
+
+# ╔═╡ b2c282b2-7914-4c39-acc1-419f91282bbd
+# ╠═╡ disabled = true
+#=╠═╡
+#stuff that is being changed
+begin	
+	specificenergy = Base.range(0.0, 500, length=121)
+	n = length(specificenergy)
+
+	propulsion = Vector{Any}(undef, n)  # or Vector{Propulsion}(undef, n)
+    output       = Vector{Any}(undef, n)
+	
+	W_battery = zeros(n)
+    W_fuel    = zeros(n)
+	TotalWeight = zeros(n)
+	
+	
+	for i =1:length(specificenergy)
+		
+		propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy[i], SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+
+		
+		W_motor = component_weight(propulsion.P_max_engine * ϕ, propulsion.power_to_weight_motor)
+        W_controller = component_weight(propulsion.P_max_engine * ϕ / propulsion.η_motor,propulsion.power_to_weight_controller)
+        W_PGD = W_motor + W_controller
+		
+		feasible, num_battery_packs, W_f = batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion, aircraft, W_PGD, batt, g, η, μ, LD_takeoff)
+		if !feasible
+			break
+		end
+	    W_battery[i] = batt.weight*num_battery_packs
+        W_fuel[i]    = W_f
+		TotalWeight[i] =  W_fuel[i] + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery[i] ;
+
+	end
+end
+  ╠═╡ =#
+
+# ╔═╡ bbdd793a-650c-4176-9c3d-86da99f56458
+# ╠═╡ disabled = true
+#=╠═╡
+#stuff that is constant/being kept the same
+begin
+	ϕ = 1
+	power_to_weight_motor      		= 5000
+	power_to_weight_controller 		= 2000
+
+	TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ, load1, dVdt1, ρ1)
+	takeoff = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ, load2, dVdt2, ρ2)
+	CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ, load3, dVdt3, ρ3)
+	CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ, load4, dVdt4, ρ4)
+	DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ, load5, dVdt5, ρ5)
+	LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ, load6, dVdt6, ρ6)
+	TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ, load7, dVdt7, ρ7)
+	
+	FULLMISSION=[TAXI, takeoff, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
+
+	g=9.81
+	η=1
+	Max_iterations=2000
+end;
+  ╠═╡ =#
+
+# ╔═╡ 783b2ab8-25bd-426e-868f-57ce6ae38873
+# ╠═╡ disabled = true
+#=╠═╡
+#stuff that is being changed
+begin	
+	ϕ = Base.range(0.0, 1.0, length=121)
+	n = length(ϕ)
+	
+	W_battery = zeros(n)
+    W_fuel    = zeros(n)
+	TotalWeight = zeros(n)
+	
+	
+	for i =1:n	
+		W_motor = component_weight(propulsion.P_max_engine * ϕ[i], propulsion.power_to_weight_motor)
+        W_controller= component_weight(propulsion.P_max_engine * ϕ[i] / propulsion.η_motor,propulsion.power_to_weight_controller)
+        W_PGD = W_motor + W_controller
+
+		TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ[i], load1, dVdt1, ρ1)
+		takeoff = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ[i], load2, dVdt2, ρ2)
+		CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ[i], load3, dVdt3, ρ3)
+		CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ[i], load4, dVdt4, ρ4)
+		DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ[i], load5, dVdt5, ρ5)
+		LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ[i], load6, dVdt6, ρ6)
+		TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ[i], load7, dVdt7, ρ7)
+	
+		FULLMISSION=[TAXI, takeoff, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
+
+
+		feasible, num_battery_packs, W_f = batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion, aircraft, W_PGD, batt, g, η, μ, LD_takeoff)
+		if !feasible
+			break
+		end
+	    W_battery[i] = batt.weight*num_battery_packs
+        W_fuel[i]    = W_f
+		TotalWeight[i]=  W_fuel[i] + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery[i] ;
+
+	end
+end
+  ╠═╡ =#
+
+# ╔═╡ afb4ba00-115c-4a42-a2ca-d4366bbfe021
+specificenergy= batt.packspecificenergy
+
+# ╔═╡ 3dc7c369-dc0c-4996-9f80-feb0ec912a35
+#=╠═╡
+begin 
+	W_batt=batt.weight*num_battery_packs
+	println("battery weight: ", W_batt, "kg")
+	println("fuel weight: ", W_f, "kg")
+	TotalWeight= W_f + aircraft.W_empty + aircraft.W_payload + W_PGD + W_batt ;
+	println("Total aircraft weight: ", TotalWeight, "kg")
+	
+	Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion, aircraft, W_PGD, batt, num_battery_packs, W_f, g, η, μ, LD_takeoff)
+end;
+  ╠═╡ =#
+
+# ╔═╡ 2979e0b6-c4ef-4bf8-8561-7a3d27d088f1
+# ╠═╡ disabled = true
+#=╠═╡
+#stuff that is being changed
+begin	
+	power_to_weight_motor      		= Base.range(2000, 7000, length=200)
+	#power_to_weight_controller 		= Base.range(2000, 6000, length=200)
+	n = length(power_to_weight_motor)
+
+    output       = Vector{Any}(undef, n)
+	
+	W_battery = zeros(n)
+    W_fuel    = zeros(n)
+	TotalWeight = zeros(n)
+	unusedfuel=zeros(n)
+	
+	
+	for i =1:n
+		
+		propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor[i], power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+
+		
+		W_motor = component_weight(propulsion.P_max_engine * ϕ, propulsion.power_to_weight_motor)
+        W_controller = component_weight(propulsion.P_max_engine * ϕ / propulsion.η_motor,propulsion.power_to_weight_controller)
+        W_PGD= W_motor + W_controller
+
+		
+        feasible, num_battery_packs, W_f= batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion, aircraft, W_PGD, batt, g, η, μ, LD_takeoff)
+		
+		if !feasible
+			break
+		end
+	    W_battery[i] = batt.weight*num_battery_packs
+        W_fuel[i]    = W_f
+		TotalWeight[i]=  W_fuel[i] + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery[i] ;
+
+	end
+end
+  ╠═╡ =#
+
+# ╔═╡ dc267ffa-2525-48b1-b6ac-9eccb6827918
+#=╠═╡
+begin
+	ϕ = 0.5
+	power_to_weight_motor      		= 5000
+	power_to_weight_controller 		= 2000
+
+	TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ, load1, dVdt1, ρ1)
+	TAKEOFF = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ, load2, dVdt2, ρ2)
+	CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ, load3, dVdt3, ρ3)
+	CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ, load4, dVdt4, ρ4)
+	DESCENT = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ, load5, dVdt5, ρ5)
+	LAND = MissionSegment(name6, h6, V6, duration6, ROC6, ϕ, load6, dVdt6, ρ6)
+	TAXI2 = MissionSegment(name7, h7, V7, duration7, ROC7, ϕ, load7, dVdt7, ρ7)
+	
+	FULLMISSION=[TAXI, TAKEOFF, CLIMB, CRUISE, DESCENT, LAND, TAXI2]
+
+	g=9.81
+	η=1
+	Max_iterations=1000
+
+	propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+	
+	W_motor = component_weight(propulsion.P_max_engine * ϕ, propulsion.power_to_weight_motor)
+    W_controller = component_weight(propulsion.P_max_engine * ϕ / propulsion.η_motor,propulsion.power_to_weight_controller)
+    W_PGD= W_motor + W_controller
+
+	feasible, num_battery_packs, W_f = batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion, aircraft, W_PGD, batt, g, η, μ, LD_takeoff)
+
+end;
+
   ╠═╡ =#
 
 # ╔═╡ Cell order:
@@ -681,7 +584,6 @@ end
 # ╟─60b6bc84-abac-481d-b547-ac1d9c493ee2
 # ╠═87f4784b-323f-47f7-843b-ebe2c247230f
 # ╟─7b2fcfee-edf0-4c79-928a-57fcfcb864c8
-# ╠═f00e2e47-d37a-4725-be70-a0e4cea3359b
 # ╠═afb4ba00-115c-4a42-a2ca-d4366bbfe021
 # ╟─20012e75-c631-47ea-b021-b0e4a0430ed4
 # ╟─3404927e-e10a-447c-8917-89600f442cb9
@@ -697,21 +599,23 @@ end
 # ╠═4d6e0c76-2699-426d-9da9-976904e7707f
 # ╠═fe6e4969-f985-4123-9ebb-8af530e7e663
 # ╠═4b73459d-6f4a-4778-859d-4ebb7a5ff6a0
+# ╟─f656498f-5dd6-45fa-9bf7-0255856c7b34
+# ╟─04f5332d-8555-40ba-9c34-957fddb89034
+# ╠═dc267ffa-2525-48b1-b6ac-9eccb6827918
+# ╠═3dc7c369-dc0c-4996-9f80-feb0ec912a35
+# ╟─734faa23-3471-491b-bf04-b4464e14fab6
 # ╟─3c66a4ae-e98f-47d3-9a2b-748d19e7a839
 # ╠═bbdd793a-650c-4176-9c3d-86da99f56458
 # ╠═b2c282b2-7914-4c39-acc1-419f91282bbd
-# ╠═97ff6cfe-bba1-4aaa-b01d-ca7f6a9ade2e
-# ╠═61a2016a-2f21-450a-bd6a-2cae8eb93c49
-# ╠═492a4f53-f58e-497c-b9f0-bc1112140efc
-# ╠═986bce6c-3ef0-42e2-8a80-1da7c9e79611
-# ╠═4f8d879d-f479-4b1e-a662-a9f692681ad5
+# ╟─97ff6cfe-bba1-4aaa-b01d-ca7f6a9ade2e
+# ╟─362f16ea-04d2-408d-b9a1-5327ff32bd96
 # ╟─2e5cac5e-edd9-497b-b0e1-68607dfaf856
 # ╠═d008b166-0841-48b8-86ad-6478ed95be88
 # ╠═783b2ab8-25bd-426e-868f-57ce6ae38873
-# ╠═87520646-7ec2-4c50-b456-40922945fc13
-# ╠═77cc9a93-a94f-419e-826b-739a0b64d245
+# ╟─87520646-7ec2-4c50-b456-40922945fc13
+# ╟─77cc9a93-a94f-419e-826b-739a0b64d245
 # ╟─6156c4fb-73ba-4b9f-810e-9d61d58faa1c
 # ╠═5b48d066-26fa-484b-b749-8fc207f5867e
 # ╠═2979e0b6-c4ef-4bf8-8561-7a3d27d088f1
-# ╠═be028496-e829-4d2d-b6ae-468080731524
-# ╠═a1a6593e-703b-4113-9fdd-e6dbed800fd2
+# ╟─be028496-e829-4d2d-b6ae-468080731524
+# ╟─a1a6593e-703b-4113-9fdd-e6dbed800fd2

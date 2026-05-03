@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ a7c0b5c4-b127-4783-beba-cc20e43c4c0f
 # ╠═╡ show_logs = false
 begin
@@ -101,7 +113,7 @@ md"**Defining the Input parameters**"
 
 
 # ╔═╡ 81a34601-5dc4-4287-bef2-aaf7d36405a0
-	aircraft = Aircraft(0.0, 20000/9.81 , 50000/9.81, 0.0, 0.0, 0.0, 0.0)
+	aircraft = Aircraft(0.0, 20000/9.81 , 50000/9.81, 0.0, 0.0, 0.0, 0.0, 200, 1000)
 	
 
 # ╔═╡ 40fde0c9-5cde-43b5-8cda-9b9db2a7e4c5
@@ -246,6 +258,174 @@ begin
     )
 end
 
+# ╔═╡ 5a5f25f6-f19a-4dc9-a6d8-06390ec763f3
+
+
+# ╔═╡ 5e5db59d-1ce0-40f4-bea7-be9710f07214
+md" # Design Space for Cruise Segment"
+
+# ╔═╡ b87ca1c9-a5b1-4c50-ac96-300a2a357278
+md"""
+NASA Altair UAV. 
+Computed available volume in fuselage (excluding cabin and engine at the rear) is 4.71m$^3$.
+Some of this is taken up by fuel (capacity = 1.619m$^2$, including wing fuel tanks)
+Thus an approximation of available volume for battery storage = 2.71 m$^3$.
+
+"""
+
+# ╔═╡ efbddfdd-3ddf-49d1-9a9f-7d885d83bb24
+md"### Define Battery"
+
+# ╔═╡ c29ec37e-25e7-4fdd-a1df-dc0425e1b8f9
+@bind batteryselection Select(["PB345V124E-L"])
+
+# ╔═╡ ea1cf74b-a24d-4c35-afa7-588cf9e755b7
+batt=battery(batteryselection)
+
+# ╔═╡ c7212ebd-4230-4121-a1de-6d61e3301936
+md"""
+**$batteryselection** 
+
+| Parameter     			| Value   | Units| 
+| ----- 					| ---- 	            |----|
+| Maximum Continuous Power 			| $(batt.maxcontinuouspower)                     |W|
+| Energy Storage Capacity 					| $(batt.energystoragecapacity)                   |Wh|
+| Pack Specific Energy    | $(batt.packspecificenergy)            |Wh/kg|
+| Weight | $(batt.weight)             |kg|
+| Volume      | $(batt.volume)        |m^3|
+| Nominal Voltage   | $(batt.nominalvoltage)     |V|
+
+"""
+
+# ╔═╡ 69d05df8-c62e-41ba-a164-193af9c563bd
+begin
+	specificenergy2= batt.packspecificenergy
+	MTOW2= 3175
+	W_payload2 = 340
+	W_empty2 = 1475
+    S2   = 29.24
+    AR2  = 23.5
+    e2   = 0.8
+    Cd02 = 0.018
+	maxfuelweight2 = 1360.77
+	maxbatteryvolume2 = 2.71 
+
+
+end;
+
+# ╔═╡ 1b420058-6b3d-4e9d-a727-c164eced9780
+aircraft2 = Aircraft(MTOW2, W_payload2, W_empty2, S2, AR2, e2, Cd02,maxfuelweight2,maxbatteryvolume2)
+
+# ╔═╡ 4faa6000-5e51-4900-aa91-ecf64dc4bac1
+begin
+	η_motor                    		= 0.97 #95-97% efficiency   
+	η_controller               		= 0.96
+	η_battery                 		= 0.95
+	SOC_min                    		= 0.2
+	SFC                        		= 0.32
+	W_engine 				   		= 175
+	P_max_engine 			   		= 700958
+	No_Engines                 		= 1
+	energy_density_fuel       	    = 11900.0
+	η_gas_turbine_efficiency 		= 0.35  
+	η_gearbox_efficiency 			= 0.95
+	η_propulsive_efficiency 		= 0.8
+	η_electric_generator_efficiency = 0.98
+	power_to_weight_motor      		= 5000
+	power_to_weight_controller 		= 2000	
+end;
+
+# ╔═╡ a1f35d77-64e1-4888-a22f-88fd4fc2ebee
+	propulsion2 = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+
+# ╔═╡ 298bef98-8880-4032-bb6e-07fa5634d169
+md"### Define Mission Segment"
+
+# ╔═╡ 01d7b52c-c5fd-45bf-a35d-455225d97c1c
+begin
+	name           = "Cruise"
+	h   			= 4267.2
+	V 				= 51.44
+	ROC 			= 0.0
+	load 			= 1
+	dVdt 			= 0.0
+	T, P, ρ  = atmosphere(h);
+	μ=0.02
+	LD_takeoff=11
+	range = Base.range(0.0, 1300*1000, length=121)
+	duration 		= range/V
+	ϕ2 = 0.5
+	η=1
+	Max_iterations=1000
+end;
+
+# ╔═╡ 3f3cc400-1ad7-4c2c-b7b3-e3309218a2cc
+md"### Weight Sizing"
+
+# ╔═╡ 015a7d89-e613-4a6d-b78c-fd45480885e5
+begin
+	W_motor = component_weight(propulsion2.P_max_engine * ϕ2, propulsion2.power_to_weight_motor)
+    W_controller = component_weight(propulsion2.P_max_engine * ϕ2 / 	propulsion2.η_motor,propulsion2.power_to_weight_controller)
+    W_PGD= W_motor + W_controller
+
+	n = length(duration)	
+	W_battery = zeros(n)
+    W_fuel    = zeros(n)
+	TotalWeight = zeros(n)
+
+	for i = 1:n
+		CRUISE = MissionSegment(name, h, V, duration[i], ROC, ϕ2, load, dVdt, ρ)
+		
+		FULLMISSION=[CRUISE]
+	
+		feasible, num_battery_packs, W_f = batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion2, aircraft2, W_PGD, batt, g, η, μ, LD_takeoff);
+	
+		W_battery[i] = num_battery_packs*batt.weight
+	    W_fuel[i]    = W_f
+		TotalWeight[i]=  W_fuel[i] + aircraft2.W_empty + aircraft2.W_payload + W_PGD + W_battery[i] ;
+		
+		if !feasible
+			break
+		end
+	end
+end
+
+# ╔═╡ 4e7880fc-5f09-4656-ace3-e3ccaae23f63
+begin
+	plot(range/1000,	    TotalWeight,
+	    xlabel = "Range (km)",
+	    ylabel = "Weight (kg)",
+		label = "Total Aircraft Weight (kg)",
+	    linewidth = 2,
+		title="ϕ = $(ϕ2)",
+		xlim=(0,350)
+	)
+
+	plot!(range/1000,  W_fuel,#.+W_empty2.+W_payload2,
+	    linewidth = 2,
+		label = "Fuel Weight (kg)"
+	)
+
+	plot!(range/1000, W_battery,#+ W_fuel.+W_empty2.+W_payload2,
+	    linewidth = 2,
+		label = "Battery W (kg)"
+	)
+
+end
+
+# ╔═╡ 0f4a3ddc-da5c-4ab4-ae3e-0f468547eb40
+
+
+# ╔═╡ c170ba1b-0b5e-45ea-98ae-82a890fe7f4d
+md"# Payload Range Diagram"
+
+# ╔═╡ 7a88560e-b6fd-4225-8058-f93eb1c6c486
+md"""
+Payload range diagrams are used to analyse the mission performance. They are used in aircraft design to understand how the range is affected as the payload is decreased.
+
+For the first segment, when the payload is decreased, fuel is added to maintain MTOW. It is expected that when the payload is decreased, the aircraft can fly for longer. At a certain point, fuel volume constraints come into play; in this region the aircraft is flying less than MTOW.
+"""
+
 # ╔═╡ Cell order:
 # ╟─a8934270-fbb9-11f0-bb4a-bf856ac781c2
 # ╟─d443e909-a9bb-4088-b23e-ff486e328207
@@ -259,7 +439,7 @@ end
 # ╟─c0d0cf86-1af4-4c16-a9ef-8f270c5b3439
 # ╟─28a0be2f-3b76-4485-bd44-cae39c77cbd9
 # ╟─93f0877e-6e48-4c6f-817b-2cbd354df71d
-# ╟─81a34601-5dc4-4287-bef2-aaf7d36405a0
+# ╠═81a34601-5dc4-4287-bef2-aaf7d36405a0
 # ╟─40fde0c9-5cde-43b5-8cda-9b9db2a7e4c5
 # ╟─25e053e9-6109-45fa-b41c-8659f2b863d4
 # ╠═c157e2cb-d1c7-42ed-9835-920e398a4a6e
@@ -273,3 +453,22 @@ end
 # ╟─ce3a1075-f463-44e0-ac57-407adb6ce495
 # ╟─08a76f39-ac8f-4cb5-85ee-63aaa11da383
 # ╟─0d67397c-77c1-495c-bd6d-fe545b9b70e4
+# ╟─5a5f25f6-f19a-4dc9-a6d8-06390ec763f3
+# ╟─5e5db59d-1ce0-40f4-bea7-be9710f07214
+# ╠═b87ca1c9-a5b1-4c50-ac96-300a2a357278
+# ╟─efbddfdd-3ddf-49d1-9a9f-7d885d83bb24
+# ╟─c29ec37e-25e7-4fdd-a1df-dc0425e1b8f9
+# ╟─ea1cf74b-a24d-4c35-afa7-588cf9e755b7
+# ╟─c7212ebd-4230-4121-a1de-6d61e3301936
+# ╠═69d05df8-c62e-41ba-a164-193af9c563bd
+# ╟─1b420058-6b3d-4e9d-a727-c164eced9780
+# ╠═4faa6000-5e51-4900-aa91-ecf64dc4bac1
+# ╟─a1f35d77-64e1-4888-a22f-88fd4fc2ebee
+# ╟─298bef98-8880-4032-bb6e-07fa5634d169
+# ╠═01d7b52c-c5fd-45bf-a35d-455225d97c1c
+# ╟─3f3cc400-1ad7-4c2c-b7b3-e3309218a2cc
+# ╠═015a7d89-e613-4a6d-b78c-fd45480885e5
+# ╠═4e7880fc-5f09-4656-ace3-e3ccaae23f63
+# ╟─0f4a3ddc-da5c-4ab4-ae3e-0f468547eb40
+# ╟─c170ba1b-0b5e-45ea-98ae-82a890fe7f4d
+# ╟─7a88560e-b6fd-4225-8058-f93eb1c6c486

@@ -1,6 +1,6 @@
 #Power Management
 #how much energy comes from the battery vs generator
-#adjust for during each flight stage
+#adjust for  each flight stage
 #input Ptotal: sum of the maximum powers, ϕ: hybridization factor
 #ϕ - defined as Pelectricrequired/Prequiredtotal where ϕ=0 is conventional 
 #output Pelectricrequired, Pfuelrequired

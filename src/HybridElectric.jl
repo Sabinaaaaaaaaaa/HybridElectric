@@ -16,7 +16,7 @@ export Aircraft, Propulsion, MissionSegment, MissionState
 
 #==========================================================================================#
 include("aerodynamics.jl") 
-export dragforce, atmosphere
+export dragforce, atmosphere, fuelconsumption
 
 #==========================================================================================#
 include("electricpropulsion.jl") 
@@ -32,15 +32,11 @@ include("mission.jl")
 export runmission, batteryandfuelsizing
 
 #==========================================================================================#
-include("fuelpropulsion.jl") 
-export fuelconsumption
-
-#==========================================================================================#
 include("power.jl") 
 export powersplit, powerrequired, takeoffpowerrequired
 
 #==========================================================================================#
 include("performance.jl")
-export Range_parallel, Range_series, weight_iteration, PayloadRange, P_W
+export Range_parallel, Range_series, weight_iteration, PayloadRange, P_W, payloadvolume, plotvolume
 
 end

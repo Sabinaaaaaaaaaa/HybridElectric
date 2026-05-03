@@ -88,7 +88,7 @@ end
 
 
 
-function PayloadRange(Aircraft, Propulsion,g,cp_cruise, L_D_cruise; Wf= 0)
+function PayloadRange(Aircraft, Propulsion,g,cp_cruise, L_D_cruise; Wf= 0, W_batt=0)
 		W_payload=Aircraft.W_payload
 		W0=Aircraft.MTOW
 		We=Aircraft.W_empty
@@ -110,16 +110,21 @@ function PayloadRange(Aircraft, Propulsion,g,cp_cruise, L_D_cruise; Wf= 0)
 	    Wpl_B = W_payload 
 	
 	    #POINT C
-	    Wf_C = W_fuel_max
-	    Wpl_C = (W0 - We - Wf_C) #remaining payload at max fuel
-	    WC_i = W0
+	    Wf_C = min(W_fuel_max, W0 - We - W_batt)
+	    Wpl_C = (W0 - We - W_batt - Wf_C) #remaining payload at max fuel
+	    if Wpl_C<0
+			Wf_C=W0-We-W_batt
+			Wpl_C=0
+		end
+		
+		WC_i = W0
 	    WC_f = W0 - Wf_C
 	    R_C = (η_p/(cp_cruise*g)) * L_D_cruise * log(WC_i / WC_f)/1000
 	
 	    # POINT D
-	    W0_D = We + W_fuel_max  #W0 shrinks, no payload
+	    W0_D = We + Wf_C + W_batt  #W0 shrinks, no payload
 	    WD_i = W0_D
-	    WD_f = W0_D - W_fuel_max
+	    WD_f = W0_D - Wf_C
 	    R_D = (η_p/(cp_cruise*g)) * L_D_cruise * log(WD_i / WD_f)/1000
 	    Wpl_D = 0.0
 	
@@ -180,3 +185,143 @@ end
 # Override just battery specific energy for a graph
 #     R800 = Range_parallel(Aircraft1, Propulsion1, E_0total, ϕ; specificenergy_Whkg=800.0)
 # used for parameter sweep!
+
+
+
+function payloadvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, λ=1)
+	#assuming symmetrical
+	#assume reduction in volume is proportional to reduction in volume?
+	#assume reduction in volume takes place along the length!!!
+	
+	length = (x_end - x_start)*λ
+	height = abs(z_end - z_start)
+	new_x_end=x_end*λ
+
+	if width <0.0 || radius <0.0
+		println("Error: width and radius must be non-negative.")
+		return nothing
+	end
+
+	if λ <= 0.0
+        println("Error: λ must be positive.")
+        return nothing
+    end
+		
+
+	if width>0.0 && radius==0.0
+		volume = length*height*width
+		return volume, new_x_end
+		
+	elseif radius >0.0 && width ==0.0
+		# Clamp height to valid range [0, 2*radius]
+	    height = clamp(height, 0, 2 * radius)
+		
+		if height >= radius*2
+		        # Full circle
+		        area = π * radius^2
+		    else
+		        # Circular segment:
+		        # θ is the half-angle subtended at the centre by the chord at depth (radius - height)
+		        t = radius - height
+		        θ = acos(t / radius)           # half-angle in radians
+		        area = radius^2 * (θ - sin(θ) * cos(θ))
+		    end
+		
+		    volume = area * length
+		return volume, new_x_end
+		
+	else
+        println("Invalid inputs: define exactly one of width or radius (not both, not neither).")
+        if width > 0.0 && radius > 0.0
+            println("Both width and radius are defined.")
+        elseif width == 0.0 && radius == 0.0
+            println("Neither width nor radius is defined.")
+        end
+        return nothing
+    end
+end
+
+function plotvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, λ=1)
+    
+
+
+	if width <0.0 || radius <0.0
+		println("Error: width and radius must be non-negative.")
+		return nothing
+	end
+
+	if λ <= 0.0
+        println("Error: λ must be positive.")
+        return nothing
+    end
+		
+
+	if width > 0.0 && radius == 0.0
+		#rectanglular
+		len = (x_end - x_start) * λ
+		x0, x1 = x_start, x_start + len
+		y0, y1 = -width/2, width/2
+		z0, z1 = z_start, z_end
+
+		edges = [
+			# bottom face
+			([x0,x1],[y0,y0],[z0,z0]),
+			([x0,x1],[y1,y1],[z0,z0]),
+			([x0,x0],[y0,y1],[z0,z0]),
+			([x1,x1],[y0,y1],[z0,z0]),
+			# top face
+			([x0,x1],[y0,y0],[z1,z1]),
+			([x0,x1],[y1,y1],[z1,z1]),
+			([x0,x0],[y0,y1],[z1,z1]),
+			([x1,x1],[y0,y1],[z1,z1]),
+			# verticals
+			([x0,x0],[y0,y0],[z0,z1]),
+			([x1,x1],[y0,y0],[z0,z1]),
+			([x0,x0],[y1,y1],[z0,z1]),
+			([x1,x1],[y1,y1],[z0,z1]),
+		]
+
+		return edges
+
+	elseif radius >0.0 && width ==0.0
+		# Parametric cylinder surface
+	    len = (x_end - x_start) * λ
+
+		θ_start = asin(z_start / radius)
+		θ = range(-π - θ_start, 0 + θ_start, length=50)
+		y_edge = sqrt(radius^2 - z_start^2)
+		x0, x1 = x_start, x_start + len
+
+        edges = []
+
+        # Arc rings at each end
+        for xi in [x0, x1]
+            ys_ring = [radius * cos(θi) for θi in θ]
+            zs_ring = [radius * sin(θi) for θi in θ]
+            push!(edges, (fill(xi, length(θ)), ys_ring, zs_ring))
+        end
+
+        # Flat top edge closing the semicircle at each end
+        for xi in [x0, x1]
+            push!(edges, ([xi, xi], [-y_edge, y_edge], [z_start, z_start]))
+        end
+
+        # Longitudinal lines along the length
+        n_lines = 8
+        for θi in range(-π - θ_start, 0 + θ_start, length=n_lines)
+            yi = radius * cos(θi)
+            zi = radius * sin(θi)
+            push!(edges, ([x0, x1], [yi, yi], [zi, zi]))
+        end
+	    return edges
+		
+	else
+        println("Invalid inputs: define exactly one of width or radius.")
+        if width > 0.0 && radius > 0.0
+            println("Both width and radius are defined.")
+        elseif width == 0.0 && radius == 0.0
+            println("Neither width nor radius is defined.")
+        end
+        return nothing
+    end
+end
