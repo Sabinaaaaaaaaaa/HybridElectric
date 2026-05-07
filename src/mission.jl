@@ -8,7 +8,7 @@
 # 6. Return new state
 
 #initialise the state 
-function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_fuel_initial, g, η, μ, LD_takeoff)
+function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_fuel_initial, g, η, μ, LD_takeoff; turbofan=false)
     #this state describes the cumulative effect of each state on the TIME, SOC, W_fuel, W_total 
     state = MissionState(
         0.0,
@@ -43,8 +43,11 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
 
             #POWER REQUIREMENTS
             #calculate power required with the current weight estimate at this flight stage
-            if segment.name=="takeoff"
+            if segment.name=="Takeoff"
                 P_req=takeoffpowerrequired(weight, segment.load*g, segment.V, μ, segment.dVdt, LD_takeoff)/η
+            elseif segment.name=="Taxi"
+                P_req = μ * weight * g * segment.V
+
             else
                 P_req=powerrequired(drag, segment.V, weight, segment.load*g, segment.dVdt, segment.ROC)/η 
             end
@@ -52,8 +55,13 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
             P_EM_req, P_FB_req =powersplit(P_req, segment.ϕ)
 
             #validation checks to see if engine is able to deliver this!
-            if P_FB_req>Propulsion.P_max_engine 
-                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(Propulsion.P_max_engine) W")
+            if turbofan
+                P_max_engine=Propulsion.P_max_engine*segment.V
+            else
+                P_max_engine=Propulsion.P_max_engine
+            end
+            if P_FB_req>P_max_engine 
+                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(P_max_engine) W")
                 return false, state.SOC, batterydepleted, state.W_fuel
             end
 
@@ -85,7 +93,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
 
             #FUEL INTEGRATION PART
             if P_FB_req > 0
-                fuelburn = fuelconsumption(P_FB_req, Propulsion.SFC, dt)
+                fuelburn = fuelconsumption(P_FB_req, segment.SFC, dt)
                 state.W_fuel -= fuelburn
                 if state.W_fuel < 0
                     println("Fuel exhausted during mission segment! Need to increase fuel size.")
@@ -107,7 +115,7 @@ end
 
 
 
-function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft, W_PGD, batt, g, η, μ, LD_takeoff)
+function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft, W_PGD, batt, BattVolumeMax, g, η, μ, LD_takeoff; turbofan=false)
     W_f = 0.0
     num_battery_packs = 0.0 #number of battery packs
 
@@ -115,7 +123,7 @@ function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft,
 
     #volume constraints 
     FuelMax=Aircraft.maxfuelweight           # Maximum Fuel Capacity [kg] 
-    BattVolumeMax=Aircraft.maxbatteryvolume  # Maximum Battery Volume [m^3]
+    # Maximum Battery Volume [m^3]
     feasible=false
 
     for j in 1:Max_iterations
@@ -141,7 +149,7 @@ function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft,
         end 
 
 
-        Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_f, g, η, μ, LD_takeoff); 
+        Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_f, g, η, μ, LD_takeoff; turbofan=turbofan); 
                 
         if !Valid #not valid if it does not meet the mission requirements
             if batterydepleted #if battery was depleted increase battery

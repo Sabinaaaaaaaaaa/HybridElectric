@@ -88,49 +88,66 @@ end
 
 
 
-function PayloadRange(Aircraft, Propulsion,g,cp_cruise, L_D_cruise; Wf= 0, W_batt=0)
-		W_payload=Aircraft.W_payload
-		W0=Aircraft.MTOW
-		We=Aircraft.W_empty
+function PayloadRange(Aircraft, Propulsion, g, L_D_cruise; W_batt=0, cp_cruise=0.0, sfc_cruise=0.0, W_PGD=0.0)
+	W_payload=Aircraft.W_payload
+	W0=Aircraft.MTOW
+	We=Aircraft.W_empty + W_batt + W_PGD
+	W_fuel_max=Aircraft.maxfuelweight
+
+	if cp_cruise < 0.0 || sfc_cruise < 0.0
+		println("Error: cp_cruise and sfc_cruise must be positive.")
+		return nothing
+	elseif cp_cruise >0.0
 		η_p=Propulsion.η_propulsive_efficiency 
-		W_fuel_max=Aircraft.maxfuelweight
-		
-	    #POINT A
-	    R_A = 0.0
-	    Wpl_A = W_payload  #kg
+    	range_factor = (η_p / (cp_cruise * g)) * L_D_cruise
+	elseif sfc_cruise>0.0
+		cp_cruise = sfc_cruise / 3.6e6   # kg/J
+		range_factor = L_D_cruise / (cp_cruise * g)
+	end
 	
-	    #POINT B
-	    Wf_B = W0 - We - W_payload  #fuel available at max payload
-		if Wf!=0
-			Wf_B=Wf
-		end
-	    WB_i = W0
-	    WB_f = W0 - Wf_B
-	    R_B = (η_p/(cp_cruise*g)) * L_D_cruise * log(WB_i / WB_f)/1000
-	    Wpl_B = W_payload 
-	
-	    #POINT C
-	    Wf_C = min(W_fuel_max, W0 - We - W_batt)
-	    Wpl_C = (W0 - We - W_batt - Wf_C) #remaining payload at max fuel
-	    if Wpl_C<0
-			Wf_C=W0-We-W_batt
-			Wpl_C=0
-		end
-		
-		WC_i = W0
-	    WC_f = W0 - Wf_C
-	    R_C = (η_p/(cp_cruise*g)) * L_D_cruise * log(WC_i / WC_f)/1000
-	
-	    # POINT D
-	    W0_D = We + Wf_C + W_batt  #W0 shrinks, no payload
-	    WD_i = W0_D
-	    WD_f = W0_D - Wf_C
-	    R_D = (η_p/(cp_cruise*g)) * L_D_cruise * log(WD_i / WD_f)/1000
-	    Wpl_D = 0.0
-	
-	    ranges_pts   = [R_A,   R_B,   R_C,   R_D]
-	    payloads_pts = [Wpl_A,      Wpl_B,      Wpl_C,      Wpl_D]
-		return  ranges_pts, payloads_pts
+
+    # POINT A: max payload, no fuel
+    R_A = 0.0
+    Wpl_A = W_payload
+
+    # POINT B: max payload, fuel limited by MTOW and fuel tank capacity
+    Wpl_B = W_payload
+
+    Wf_B = min(W_fuel_max, W0 - We - Wpl_B)
+    
+
+    Wf_B = max(Wf_B, 0.0)
+
+    WB_i = We + Wpl_B + Wf_B
+    WB_f = We + Wpl_B
+
+    R_B = range_factor * log(WB_i / WB_f) / 1000
+
+    # POINT C: max fuel, payload reduced if needed
+    Wf_C = min(W_fuel_max, W0 - We)
+    Wpl_C = W0 - We - Wf_C
+
+    Wpl_C = max(Wpl_C, 0.0)
+    Wpl_C = min(Wpl_C, W_payload)
+
+    WC_i = We + Wpl_C + Wf_C
+    WC_f = We + Wpl_C
+
+    R_C = range_factor * log(WC_i / WC_f) / 1000
+
+    # POINT D: zero payload, max fuel / ferry range
+    Wpl_D = 0.0
+    Wf_D = min(W_fuel_max, W0 - We)
+
+    WD_i = We + Wf_D
+    WD_f = We
+
+    R_D = range_factor * log(WD_i / WD_f) / 1000
+
+    ranges_pts = [R_A, R_B, R_C, R_D]
+    payloads_pts = [Wpl_A, Wpl_B, Wpl_C, Wpl_D]
+
+    return (ranges=ranges_pts, payloads=payloads_pts)
 
 end
 
@@ -157,7 +174,7 @@ function P_W(W_S, α, β, Segment, Propulsion, Aircraft; constraint="empty", alt
 			end
 		end
 
-		if constraint == "ceiling"
+		if constraint == "Ceiling"
 			-,-,ρ_ceiling=atmosphere(altitude)
 			σ_ceil = ρ_ceiling / 1.225
 			P_W = (α/β) * (2/η_p) * sqrt(CD_0/(π*AR*e)) / σ_ceil^0.7
@@ -188,31 +205,37 @@ end
 
 
 
-function payloadvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, λ=1)
+function payloadvolume(x_start, x_end, z_start, z_end; width= -1.0 ,radius=-1.0, λ=-1)
 	#assuming symmetrical
 	#assume reduction in volume is proportional to reduction in volume?
 	#assume reduction in volume takes place along the length!!!
 	
-	length = (x_end - x_start)*λ
-	height = abs(z_end - z_start)
-	new_x_end=x_end*λ
-
-	if width <0.0 || radius <0.0
-		println("Error: width and radius must be non-negative.")
+	#VAIDATION
+	if λ < 0.0 || λ > 1.0
+		println("Error: λ must be between 0 and 1.")
 		return nothing
 	end
 
-	if λ <= 0.0
-        println("Error: λ must be positive.")
+	if width < 0.0 && radius < 0.0
+        println("Error: width or radius must be provided.")
         return nothing
     end
+
+	if width > 0.0 && radius > 0.0
+        println("Error: both width and radius are defined.")
+        return nothing
+    end
+
+	len = (x_end - x_start)*(1-λ)
+	height = abs(z_end - z_start)
+	new_x_end=x_end*(1-λ)
 		
 
-	if width>0.0 && radius==0.0
-		volume = length*height*width
+	if width>=0.0
+		volume = len*height*width
 		return volume, new_x_end
-		
-	elseif radius >0.0 && width ==0.0
+	end
+	if radius >=0.0 
 		# Clamp height to valid range [0, 2*radius]
 	    height = clamp(height, 0, 2 * radius)
 		
@@ -227,38 +250,36 @@ function payloadvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, �
 		        area = radius^2 * (θ - sin(θ) * cos(θ))
 		    end
 		
-		    volume = area * length
+		    volume = area * len
 		return volume, new_x_end
-		
-	else
-        println("Invalid inputs: define exactly one of width or radius (not both, not neither).")
-        if width > 0.0 && radius > 0.0
-            println("Both width and radius are defined.")
-        elseif width == 0.0 && radius == 0.0
-            println("Neither width nor radius is defined.")
-        end
-        return nothing
-    end
+	end
+	
 end
 
-function plotvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, λ=1)
-    
+function plotvolume(x_start, x_end, z_start, z_end; width= -1.0 ,radius=-1.0, λ=-1.0)
 
-
-	if width <0.0 || radius <0.0
-		println("Error: width and radius must be non-negative.")
+	#VAIDATION
+	if λ < 0.0 || λ > 1.0
+		println("Error: λ must be between 0 and 1.")
 		return nothing
 	end
 
-	if λ <= 0.0
-        println("Error: λ must be positive.")
+	if width < 0.0 && radius < 0.0
+        println("Error: width or radius must be provided.")
         return nothing
     end
+
+	if width > 0.0 && radius > 0.0
+        println("Error: both width and radius are defined.")
+        return nothing
+    end
+
+	len = (x_end - x_start)*(1-λ)
+	
 		
 
-	if width > 0.0 && radius == 0.0
+	if width >= 0.0 
 		#rectanglular
-		len = (x_end - x_start) * λ
 		x0, x1 = x_start, x_start + len
 		y0, y1 = -width/2, width/2
 		z0, z1 = z_start, z_end
@@ -282,10 +303,10 @@ function plotvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, λ=1
 		]
 
 		return edges
-
-	elseif radius >0.0 && width ==0.0
+	end
+	
+	if radius >=0.0 
 		# Parametric cylinder surface
-	    len = (x_end - x_start) * λ
 
 		θ_start = asin(z_start / radius)
 		θ = range(-π - θ_start, 0 + θ_start, length=50)
@@ -314,14 +335,6 @@ function plotvolume(x_start, x_end, z_start, z_end; width= 0.0 ,radius=0.0, λ=1
             push!(edges, ([x0, x1], [yi, yi], [zi, zi]))
         end
 	    return edges
-		
-	else
-        println("Invalid inputs: define exactly one of width or radius.")
-        if width > 0.0 && radius > 0.0
-            println("Both width and radius are defined.")
-        elseif width == 0.0 && radius == 0.0
-            println("Neither width nor radius is defined.")
-        end
-        return nothing
-    end
+	end
+
 end

@@ -11,7 +11,6 @@ struct Aircraft
     e::Float64                  # Oswald Efficiency Factor
     Cd0::Float64                # Zero-lift Drag Coefficient
     maxfuelweight::Float64      # Maximum Fuel Capacity [kg] 
-    maxbatteryvolume::Float64   # Maximum Battery Volume [m^3]
 end
 
 
@@ -23,7 +22,6 @@ struct Propulsion
     η_battery::Float64                        # Battery Efficiency
     specificenergy::Float64                   # Battery Specific Energy [Wh/kg]
     SOC_min::Float64                          # Minimum State of Charge
-    SFC::Float64                              # Specific Fuel Consumption [kg/(kW·h)]
     power_to_weight_motor::Float64            # Motor Power-to-Weight Ratio [W/kg]
     power_to_weight_controller::Float64       # Controller Power-to-Weight Ratio [W/kg]
     W_engine::Float64                         # Engine weight [kg]
@@ -49,6 +47,7 @@ mutable struct MissionSegment
     load::Float64               # Load factor
     dVdt::Float64               # Acceleration [m/s²]
     ρ::Float64                  # Air density [kg/m³]
+    SFC::Float64                # Specific Fuel Consumption [kg/(kW·h)]
 end
 
 
