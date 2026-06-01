@@ -1,8 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
 
 # ╔═╡ 4580f93b-25b0-4f41-bdfa-a0cd2f503278
 # ╠═╡ show_logs = false
@@ -19,7 +31,7 @@ begin
 end
 
 # ╔═╡ f4515400-d2f0-11f0-a3cd-db9046777251
-md"# Hybrid Electric Aircraft Demo (run mission)"
+md"# run mission demo"
 
 # ╔═╡ 5f1441ea-2158-4b08-98db-7c85b92307d4
 md"""
@@ -56,28 +68,34 @@ begin
     AR  = 11.0;
     e   = 0.80;
     Cd0 = 0.0220;
+	maxfuelweight=100
 end;
 
 # ╔═╡ 415043c5-d227-469a-8b73-bea59e3d6adb
-aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0)
+aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0,maxfuelweight)
 
 # ╔═╡ a6aecfef-c4ee-4fdd-a593-344209f5f5db
 begin
-	η_motor                    = 0.97 #95-97% efficiency   
-	η_controller               = 0.96
-	η_battery                  = 0.95
-	specificenergy             = 250# 250.0
-	SOC_min                    = 0.2
-	SFC                        = 0.332
-	power_to_weight_motor      = 5200
-	power_to_weight_controller = 3702.70
-	W_engine 				   = 411.4*2
-	P_max_engine 			   = 3251252
-	No_Engines                 = 2
+	η_motor                    		= 0.97 #95-97% efficiency   
+	η_controller               		= 0.96
+	η_battery                 		= 0.95
+	specificenergy             		= 250# 250.0
+	SOC_min                    		= 0.2
+	SFC                        		= 0.332
+	power_to_weight_motor      		= 5200
+	power_to_weight_controller 		= 3702.70
+	W_engine 				   		= 411.4*2
+	P_max_engine 			   		= 3251252
+	No_Engines                 		= 2
+	energy_density_fuel       	    = 11900.0
+	η_gas_turbine_efficiency 		= 0.35  
+	η_gearbox_efficiency 			= 0.95
+	η_propulsive_efficiency 		= 0.8
+	η_electric_generator_efficiency = 0.98
 end;
 
 # ╔═╡ 9f550590-c2ac-4b7c-a679-e30c9b605cf9
-propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines)
+propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
 
 # ╔═╡ ab2abbe5-baa2-4b1c-bfe6-1699a62535a1
 
@@ -113,10 +131,11 @@ begin
 	load1 			= 1.0
 	dVdt1 			= 0.0
 	T1, P1, ρ1  = atmosphere(h1);
+	sfc1=0.33
 end;
 
 # ╔═╡ 60e25379-1dae-490a-9162-c7d40a168176
-TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ1, load1, dVdt1, ρ1)
+TAXI = MissionSegment(name1, h1, V1, duration1, ROC1, ϕ1, load1, dVdt1, ρ1, sfc1)
 
 # ╔═╡ 00bc0215-39f7-4844-973b-bdad89cc7e45
 
@@ -134,10 +153,11 @@ begin
 	load2 			= 1.0
 	dVdt2 			= 0.0
 	T2, P2, ρ2  = atmosphere(h2);
+	sfc2=0.33
 end;
 
 # ╔═╡ 7686b8ea-9c1a-42e0-8d46-4aba71c90d2c
-TAKEOFF = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ2, load2, dVdt2, ρ2)
+TAKEOFF = MissionSegment(name2, h2, V2, duration2, ROC2, ϕ2, load2, dVdt2, ρ2, sfc2)
 
 # ╔═╡ fd5eff41-ddfb-4ee0-89eb-c97d618e4ece
 
@@ -155,10 +175,11 @@ begin
 	load3 			= 1.0
 	dVdt3 			= 0.0
 	T3, P3, ρ3  = atmosphere(h3);
+	sfc3=0.335
 end;
 
 # ╔═╡ fa920558-669b-4bb0-8e29-d63bc230a9a6
-CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ3, load3, dVdt3, ρ3)
+CLIMB = MissionSegment(name3, h3, V3, duration3, ROC3, ϕ3, load3, dVdt3, ρ3,sfc3)
 
 # ╔═╡ 90777660-1116-4952-b52f-0b70bf3f81fd
 
@@ -176,10 +197,11 @@ begin
 	load4 			= 1.0
 	dVdt4 			= 0.0
 	T4, P4, ρ4  = atmosphere(h4);
+	sfc4=0.335
 end;
 
 # ╔═╡ 6fb7d665-d080-4f3d-a33e-8d90814cb96d
-CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ4, load4, dVdt4, ρ4)
+CRUISE = MissionSegment(name4, h4, V4, duration4, ROC4, ϕ4, load4, dVdt4, ρ4,sfc4)
 
 # ╔═╡ a53354e7-9486-4f0c-b9d8-351cf672c722
 
@@ -197,10 +219,11 @@ begin
 	load5 			= 1.0
 	dVdt5 			= 0.0
 	T5, P5, ρ5  = atmosphere(h5);
+	sfc5=0.30
 end;
 
 # ╔═╡ ca7c9e94-d932-4869-aa19-57519ae69a58
-LAND = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ5, load5, dVdt5, ρ5)
+LAND = MissionSegment(name5, h5, V5, duration5, ROC5, ϕ5, load5, dVdt5, ρ5,sfc5)
 
 # ╔═╡ 4de09479-85cd-4f80-ba97-112d83c7f2d8
 
@@ -214,84 +237,82 @@ FULLMISSION=[TAXI, TAKEOFF, CLIMB, CRUISE, LAND]
 # ╔═╡ 6123bcd5-2a06-407d-b2d8-e95132c514e1
 
 
+# ╔═╡ b1190368-877c-4cf6-b46c-aa0da88107b3
+begin
+	@bind batteryselection Select(["PB345V124E-L"])
+	batt=battery(batteryselection)
+end
+
 # ╔═╡ 3c66a4ae-e98f-47d3-9a2b-748d19e7a839
 md"## Define function input parameters"
 
-# ╔═╡ de011768-94dc-4d39-950a-5b1ae9162529
+# ╔═╡ dac65c45-7226-41ed-a1b5-a24b3cc75cc9
+# ╠═╡ show_logs = false
 begin
 	g=9.81
 	η=1
+	#W_PGD=100
+	phi=0.1
+	μ = 1
+	LD_takeoff =10
+	W_motor = component_weight(propulsion.P_max_engine*2*phi, propulsion.power_to_weight_motor)
+	W_controller = component_weight(propulsion.P_max_engine*2*phi/propulsion.η_motor, propulsion.power_to_weight_controller)
+	W_PGD= W_motor + W_controller
 	
-	#W_PGD
-	#W_motor = component_weight(P_EM_req, propulsion.power_to_weight_motor)
-	#W_controller = component_weight(P_EM_req/propulsion.η_motor, propulsion.power_to_weight_controller)
-	#W_PGD= W_motor + W_controller + propulsion.W_engine
-	W_PGD = 100
+	num_battery_packs=30
+	W_fuel_initial = 1000
+	W_battery=num_battery_packs*batt.weight
 
-	#W_battery
-	#energy_estimate = batterypower(P_EM_req, propulsion.η_motor, propulsion.η_controller, propulsion.η_battery)*CRUISE.duration/3600.0
-	#W_battery=energy_estimate / (propulsion.specificenergy * (1.0 - propulsion.SOC_min))
-	#W_fuel_initial = 
-	#W_fuel_initial = aircraft.MTOW - aircraft.W_empty - aircraft.W_payload - W_PGD - W_battery
+end
 
-	
-	W_battery=600
-	W_fuel_initial = 2100
-	
-end;
-
-# ╔═╡ 4f8d879d-f479-4b1e-a662-a9f692681ad5
-md"
-Initial Battery Mass = $W_battery kg
-Initial Fuel Mass = $W_fuel_initial kg
-"
-
-# ╔═╡ 8b7e7ac2-07ab-4b09-abce-9435ae442aa9
-Valid, SOCstate = runmission(FULLMISSION, propulsion, aircraft, W_PGD, W_battery, W_fuel_initial, g, η)
-
-# ╔═╡ adfa7f37-fe55-4456-a5d1-12abfafa4fd4
-TotalWeight= W_fuel_initial + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery  + propulsion.W_engine
+# ╔═╡ 986bce6c-3ef0-42e2-8a80-1da7c9e79611
+begin 
+	println("battery weight: ", W_battery, "kg")
+	println("fuel weight: ", W_fuel_initial, "kg")
+	TotalWeight= W_fuel_initial + aircraft.W_empty + aircraft.W_payload + W_PGD + W_battery
+	println("total weight: ", TotalWeight, "kg")
+	Valid, SOCstate, batterydepleted, leftoverfuel = runmission(FULLMISSION, propulsion, aircraft, W_PGD, batt, num_battery_packs, W_fuel_initial, g, η, μ, LD_takeoff)
+end
 
 # ╔═╡ Cell order:
 # ╟─f4515400-d2f0-11f0-a3cd-db9046777251
 # ╟─5f1441ea-2158-4b08-98db-7c85b92307d4
 # ╟─44d1c167-fc6c-4124-b1ac-5c643308f203
-# ╠═4580f93b-25b0-4f41-bdfa-a0cd2f503278
+# ╟─4580f93b-25b0-4f41-bdfa-a0cd2f503278
 # ╟─3404927e-e10a-447c-8917-89600f442cb9
 # ╠═0cf0ae61-1fc6-4b7e-8d09-95f0b33bf362
-# ╠═415043c5-d227-469a-8b73-bea59e3d6adb
+# ╟─415043c5-d227-469a-8b73-bea59e3d6adb
 # ╠═a6aecfef-c4ee-4fdd-a593-344209f5f5db
-# ╠═9f550590-c2ac-4b7c-a679-e30c9b605cf9
+# ╟─9f550590-c2ac-4b7c-a679-e30c9b605cf9
 # ╟─ab2abbe5-baa2-4b1c-bfe6-1699a62535a1
 # ╟─07cba5c3-8a95-4f45-bf72-754f6ea76ec1
 # ╟─3b65b3da-e51a-4483-afa3-0fe16afedc9e
 # ╠═6523b68d-3ee0-4ea2-8671-b51476dfaedc
-# ╟─3eb20a1e-0324-4d95-a85f-54830460657e
+# ╠═3eb20a1e-0324-4d95-a85f-54830460657e
 # ╟─b9315b34-f28e-4c89-8c06-231b316d0eb7
 # ╠═0b4a6af4-f701-443a-b5e8-393c2b0fb6c7
-# ╠═60e25379-1dae-490a-9162-c7d40a168176
+# ╟─60e25379-1dae-490a-9162-c7d40a168176
 # ╟─00bc0215-39f7-4844-973b-bdad89cc7e45
 # ╟─44f4fafd-2933-4160-817a-5145c08179ce
 # ╠═04efbcfd-50b0-4cfb-ac84-71840620cc5b
-# ╠═7686b8ea-9c1a-42e0-8d46-4aba71c90d2c
+# ╟─7686b8ea-9c1a-42e0-8d46-4aba71c90d2c
 # ╟─fd5eff41-ddfb-4ee0-89eb-c97d618e4ece
 # ╟─f80a5b88-6688-495d-87a8-4ef2d298c743
 # ╠═928b7621-f7e3-40d2-903b-b01b177f7b91
-# ╠═fa920558-669b-4bb0-8e29-d63bc230a9a6
+# ╟─fa920558-669b-4bb0-8e29-d63bc230a9a6
 # ╟─90777660-1116-4952-b52f-0b70bf3f81fd
 # ╟─b6cfbe4d-1def-4179-a180-124717c82126
 # ╠═4c36e0a0-15da-46e3-b9f8-c9c79d1d024e
-# ╠═6fb7d665-d080-4f3d-a33e-8d90814cb96d
+# ╟─6fb7d665-d080-4f3d-a33e-8d90814cb96d
 # ╟─a53354e7-9486-4f0c-b9d8-351cf672c722
 # ╟─fe3b451f-e5fe-48a4-b42f-0aaad0b7370e
 # ╠═6c08dd47-b112-431b-98b4-5826cdc6ffc1
 # ╠═ca7c9e94-d932-4869-aa19-57519ae69a58
 # ╟─4de09479-85cd-4f80-ba97-112d83c7f2d8
 # ╟─b2462ab1-c57a-49e9-95ff-197c79302905
-# ╠═133e4216-a3ee-4dcd-94ec-8f626b6b646d
+# ╟─133e4216-a3ee-4dcd-94ec-8f626b6b646d
 # ╟─6123bcd5-2a06-407d-b2d8-e95132c514e1
+# ╠═b1190368-877c-4cf6-b46c-aa0da88107b3
 # ╟─3c66a4ae-e98f-47d3-9a2b-748d19e7a839
-# ╠═de011768-94dc-4d39-950a-5b1ae9162529
-# ╟─4f8d879d-f479-4b1e-a662-a9f692681ad5
-# ╟─8b7e7ac2-07ab-4b09-abce-9435ae442aa9
-# ╟─adfa7f37-fe55-4456-a5d1-12abfafa4fd4
+# ╠═dac65c45-7226-41ed-a1b5-a24b3cc75cc9
+# ╠═986bce6c-3ef0-42e2-8a80-1da7c9e79611

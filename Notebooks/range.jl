@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -28,6 +28,12 @@ begin
 	using HybridElectric
 	using AeroFuse
 	TableOfContents()
+end
+
+# ╔═╡ 96002619-ace8-4483-903c-14d30797cb22
+begin
+using LaTeXStrings
+
 end
 
 # ╔═╡ a8934270-fbb9-11f0-bb4a-bf856ac781c2
@@ -113,11 +119,11 @@ md"**Defining the Input parameters**"
 
 
 # ╔═╡ 81a34601-5dc4-4287-bef2-aaf7d36405a0
-	aircraft = Aircraft(0.0, 20000/9.81 , 50000/9.81, 0.0, 0.0, 0.0, 0.0, 200, 1000)
+	aircraft = Aircraft(0.0, 20000/9.81 , 50000/9.81, 0.0, 0.0, 0.0, 0.0, 200)
 	
 
 # ╔═╡ 40fde0c9-5cde-43b5-8cda-9b9db2a7e4c5
-propulsion = Propulsion(0.95, 0.0, 0.0, 400, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 11900, 0.35, 0.95, 0.8, 0.98)
+propulsion = Propulsion(0.95, 0.0, 0.0, 400, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 11900, 0.35, 0.95, 0.8, 0.98)
 
 # ╔═╡ 25e053e9-6109-45fa-b41c-8659f2b863d4
 md"
@@ -223,6 +229,7 @@ begin
         xlabel="Hybridization ratio Φ ",
         ylabel="Battery specific energy (Wh/kg)",
         xlims=(0,1), ylims=(0,10000),
+		right_margin = 8Plots.mm
     )
 
     contour!(p_main, phi, batsp, Z;
@@ -230,8 +237,9 @@ begin
         color=:black,
 		linewidth =1.2,
         clabels=true,
-	    colorbar_title = "Range (km)",
+	    colorbar_title = "\nRange (km)",
     )
+	#savefig(p_main, "RANGEBIG.svg")
 
 end
 
@@ -247,6 +255,7 @@ begin
         xlabel="Hybridization ratio Φ ",
         ylabel="Battery specific energy (Wh/kg)",
         xlims=(0,1), ylims=(0,1000),
+		right_margin = 8Plots.mm
     )
 
     contour!(p_main2, phi, batsp, Z;
@@ -254,8 +263,9 @@ begin
         color=:black,
 		linewidth =1.2,
         clabels=true,
-	    colorbar_title = "Range (km)",
+	    colorbar_title = "\nRange (km)",
     )
+	savefig(p_main2, "RANGE2.svg")
 end
 
 # ╔═╡ 5a5f25f6-f19a-4dc9-a6d8-06390ec763f3
@@ -309,12 +319,10 @@ begin
     Cd02 = 0.018
 	maxfuelweight2 = 1360.77
 	maxbatteryvolume2 = 2.71 
-
-
 end;
 
 # ╔═╡ 1b420058-6b3d-4e9d-a727-c164eced9780
-aircraft2 = Aircraft(MTOW2, W_payload2, W_empty2, S2, AR2, e2, Cd02,maxfuelweight2,maxbatteryvolume2)
+aircraft2 = Aircraft(MTOW2, W_payload2, W_empty2, S2, AR2, e2, Cd02,maxfuelweight2)
 
 # ╔═╡ 4faa6000-5e51-4900-aa91-ecf64dc4bac1
 begin
@@ -378,7 +386,7 @@ begin
 		
 		FULLMISSION=[CRUISE]
 	
-		feasible, num_battery_packs, W_f = batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion2, aircraft2, W_PGD, batt, g, η, μ, LD_takeoff);
+		feasible, num_battery_packs, W_f = batteryandfuelsizing(Max_iterations, FULLMISSION, propulsion2, aircraft2, W_PGD, batt, maxbatteryvolume2, g, η, μ, LD_takeoff);
 	
 		W_battery[i] = num_battery_packs*batt.weight
 	    W_fuel[i]    = W_f
@@ -413,19 +421,6 @@ begin
 
 end
 
-# ╔═╡ 0f4a3ddc-da5c-4ab4-ae3e-0f468547eb40
-
-
-# ╔═╡ c170ba1b-0b5e-45ea-98ae-82a890fe7f4d
-md"# Payload Range Diagram"
-
-# ╔═╡ 7a88560e-b6fd-4225-8058-f93eb1c6c486
-md"""
-Payload range diagrams are used to analyse the mission performance. They are used in aircraft design to understand how the range is affected as the payload is decreased.
-
-For the first segment, when the payload is decreased, fuel is added to maintain MTOW. It is expected that when the payload is decreased, the aircraft can fly for longer. At a certain point, fuel volume constraints come into play; in this region the aircraft is flying less than MTOW.
-"""
-
 # ╔═╡ Cell order:
 # ╟─a8934270-fbb9-11f0-bb4a-bf856ac781c2
 # ╟─d443e909-a9bb-4088-b23e-ff486e328207
@@ -451,11 +446,12 @@ For the first segment, when the payload is decreased, fuel is added to maintain 
 # ╟─fb4a24f2-c7eb-44eb-bb3f-c13fe5c9a2e3
 # ╟─0ab6745a-ac85-4abc-8d53-d2d29c020abd
 # ╟─ce3a1075-f463-44e0-ac57-407adb6ce495
-# ╟─08a76f39-ac8f-4cb5-85ee-63aaa11da383
-# ╟─0d67397c-77c1-495c-bd6d-fe545b9b70e4
+# ╠═96002619-ace8-4483-903c-14d30797cb22
+# ╠═08a76f39-ac8f-4cb5-85ee-63aaa11da383
+# ╠═0d67397c-77c1-495c-bd6d-fe545b9b70e4
 # ╟─5a5f25f6-f19a-4dc9-a6d8-06390ec763f3
 # ╟─5e5db59d-1ce0-40f4-bea7-be9710f07214
-# ╠═b87ca1c9-a5b1-4c50-ac96-300a2a357278
+# ╟─b87ca1c9-a5b1-4c50-ac96-300a2a357278
 # ╟─efbddfdd-3ddf-49d1-9a9f-7d885d83bb24
 # ╟─c29ec37e-25e7-4fdd-a1df-dc0425e1b8f9
 # ╟─ea1cf74b-a24d-4c35-afa7-588cf9e755b7
@@ -469,6 +465,3 @@ For the first segment, when the payload is decreased, fuel is added to maintain 
 # ╟─3f3cc400-1ad7-4c2c-b7b3-e3309218a2cc
 # ╠═015a7d89-e613-4a6d-b78c-fd45480885e5
 # ╠═4e7880fc-5f09-4656-ace3-e3ccaae23f63
-# ╟─0f4a3ddc-da5c-4ab4-ae3e-0f468547eb40
-# ╟─c170ba1b-0b5e-45ea-98ae-82a890fe7f4d
-# ╟─7a88560e-b6fd-4225-8058-f93eb1c6c486

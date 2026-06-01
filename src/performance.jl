@@ -186,28 +186,10 @@ function P_W(W_S, α, β, Segment, Propulsion, Aircraft; constraint="empty", alt
 		
 end
 
- #coding notes
-#  function Range_parallel(ac::Aircraft, pr::Propulsion, E0, ϕ;
-#                         energy_density_fuel_Whkg=11900.0,
-#                         gas_turbine_efficiency=0.35,
-#                         gearbox_efficiency=0.95,
-#                         propulsive_efficiency=0.8,
-#                         LD=12.0,
-#                         g=9.81,
-#                         specificenergy_Whkg=pr.specificenergy)
-# means stuff before the ; is the original inputs that you have to do...
-# calling normally without override
-#     R = Range_parallel(Aircraft1, Propulsion1, E_0total, ϕ)
-
-# Override just battery specific energy for a graph
-#     R800 = Range_parallel(Aircraft1, Propulsion1, E_0total, ϕ; specificenergy_Whkg=800.0)
-# used for parameter sweep!
-
-
 
 function payloadvolume(x_start, x_end, z_start, z_end; width= -1.0 ,radius=-1.0, λ=-1)
 	#assuming symmetrical
-	#assume reduction in volume is proportional to reduction in volume?
+	#assume reduction in volume is proportional to reduction in mass?
 	#assume reduction in volume takes place along the length!!!
 	
 	#VAIDATION

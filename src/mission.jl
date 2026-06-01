@@ -60,12 +60,13 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
             else
                 P_max_engine=Propulsion.P_max_engine
             end
-            if P_FB_req>P_max_engine 
-                println("Power FB required exceeds maximum available power at time $(state.time) seconds. Required: $(P_FB_req) W, Available: $(P_max_engine) W")
+            if P_req>P_max_engine 
+                println("Power required exceeds maximum available power at time $(state.time) seconds. Required: $(P_req) W, Available: $(P_max_engine) W")
                 return false, state.SOC, batterydepleted, state.W_fuel
             end
+            P_battery = batterypower(P_EM_req, Propulsion.η_motor, Propulsion.η_controller, Propulsion.η_battery)
 
-            if P_EM_req>BatteryPowerRating
+            if P_battery>BatteryPowerRating
                 println("Power EM required exceeds maximum available power at time $(state.time) seconds. Required: $(P_EM_req) W, Available: $(BatteryPowerRating) W")
                 batterydepleted=true
                 return false, state.SOC, batterydepleted, state.W_fuel
@@ -74,8 +75,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
 
             #ELECTRICAL INTEGRATION PART
             #update State Of Charge SOC
-            if P_EM_req > 0
-                P_battery = batterypower(P_EM_req, Propulsion.η_motor, Propulsion.η_controller, Propulsion.η_battery)
+            if P_battery > 0
                 SOC_new, E_used = stateofcharge(state.SOC, P_battery, dt, batterycapacity)
 
                 #check if battery is depleted

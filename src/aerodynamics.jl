@@ -1,7 +1,3 @@
-#to compute the drag force
-#later add a section for the propeller efficiency modelling!
-
-
 function atmosphere(altitude)
     #ISA model
     if altitude < 11000.0

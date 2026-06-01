@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.19
+# v0.20.24
 
 using Markdown
 using InteractiveUtils
@@ -155,7 +155,7 @@ begin
 end;
 
 # ╔═╡ d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
-aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight, maxbatteryvolume)
+aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight)
 
 # ╔═╡ a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
 begin
@@ -178,7 +178,7 @@ begin
 end;
 
 # ╔═╡ dbc78b24-e597-47b0-95ef-c8aa5cdb7a81
-propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
 
 # ╔═╡ be304f17-40e9-447b-a9dc-592a05a3fd47
 begin
@@ -194,7 +194,7 @@ begin
 end;
 
 # ╔═╡ c3383805-8465-4650-92fa-c84095b7f1a4
-CRUISE = MissionSegment(name, h, V, duration, ROC, ϕ, load, dVdt, ρ)
+CRUISE = MissionSegment(name, h, V, duration, ROC, ϕ, load, dVdt, ρ, 0.3)
 
 # ╔═╡ 3efc6fc2-dec8-4727-82e1-bf2f65143933
 
@@ -366,7 +366,7 @@ begin
 end
 
 # ╔═╡ c546b490-f38c-4ee4-bd0c-9f196bb718d0
-takeoff = MissionSegment("Takeoff", h, Vtakeoff, Vtakeoff/1000, ROC, ϕ, load, 2, 1.225)
+takeoff = MissionSegment("Takeoff", h, Vtakeoff, Vtakeoff/1000, ROC, ϕ, load, 2, 1.225, 0.3)
 
 # ╔═╡ 129ffe98-1444-43c2-b115-9335fed08816
 Powerreq=takeoffpowerrequired(MTOW,g, takeoff.V, μ, takeoff.dVdt, LD)
@@ -553,9 +553,9 @@ Weight = component_weight(P_max, power_to_weight)
 # ╠═703b5256-ae37-4e51-b9ea-e62530d89f8e
 # ╠═566dba61-de02-42b2-9da5-50b9376d87d5
 # ╟─d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
-# ╠═a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
+# ╟─a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
 # ╟─dbc78b24-e597-47b0-95ef-c8aa5cdb7a81
-# ╠═be304f17-40e9-447b-a9dc-592a05a3fd47
+# ╟─be304f17-40e9-447b-a9dc-592a05a3fd47
 # ╟─c3383805-8465-4650-92fa-c84095b7f1a4
 # ╟─3efc6fc2-dec8-4727-82e1-bf2f65143933
 # ╟─f42b2d58-fdcf-4e32-88bf-a4782069ddf8

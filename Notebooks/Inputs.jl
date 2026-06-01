@@ -16,12 +16,19 @@ macro bind(def, element)
     #! format: on
 end
 
-# ╔═╡ 76d3de73-2f2f-4e8b-99d7-a5a3bb22d4ba
+# ╔═╡ f858e0ae-496c-4dcb-a997-e77cb4a48684
 # ╠═╡ show_logs = false
-# ╠═╡ disabled = true
-#=╠═╡
-Pkg.add("PlutoUI")
-  ╠═╡ =#
+begin
+	using Pkg
+	using Plots
+    using PlutoUI
+    import PlutoUI: Slider, NumberField, TextField, CheckBox
+	Pkg.add("Revise")
+	Pkg.develop(path="C:\\Users\\sabin\\OneDrive\\Desktop\\FYP\\HybridElectric")
+	using HybridElectric
+	using AeroFuse
+	TableOfContents()
+end
 
 # ╔═╡ 4cbf94c2-ca00-11f0-8184-432af9656ff0
 md"# Hybrid Electric Aircraft Demo (Inputs)"
@@ -39,6 +46,19 @@ This Inputs demo shows how to define the following features for interactive para
 
 # ╔═╡ c2096e9e-10f6-4f77-90e5-7fe4c54db946
 	md"**Define Packages**"
+
+# ╔═╡ 9e98e3c8-cb09-4242-baaf-a299bc914f1f
+# ╠═╡ disabled = true
+#=╠═╡
+import Pkg
+  ╠═╡ =#
+
+# ╔═╡ 76d3de73-2f2f-4e8b-99d7-a5a3bb22d4ba
+# ╠═╡ show_logs = false
+# ╠═╡ disabled = true
+#=╠═╡
+Pkg.add("PlutoUI")
+  ╠═╡ =#
 
 # ╔═╡ 10f15af1-af71-4298-8597-c89831ae5fd5
 
@@ -106,7 +126,7 @@ md"""
 """
 
 # ╔═╡ 52b8acb8-c193-4ffe-91a1-b836ff80808c
-aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight, maxbatteryvolume)#remember to remove this after the update!
+aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight)
 
 # ╔═╡ 6edd7a19-d21c-4c00-bf75-19a46d90ce42
 
@@ -329,7 +349,6 @@ md"
 | η_battery 	 			 | Battery Efficiency				|                |
 | specificenergy 			 | Specific Energy 					| Wh/kg          |
 | SOC_min 		 			 | Minimum State of Charge   		| decimal (not %)|
-| SFC 			 			 | Specific Fuel Consumption     	| kg/(kW h)      |
 | power_to_weight_motor 	 | Motor Power to Weight Ratio      | W/kg           |
 | power_to_weight_controller | Controller Power to Weight Ratio | W/kg           |
 | W_engine 					 | Engine Weight                    | kg             |
@@ -344,7 +363,6 @@ begin
 	η_battery                  = 0.95
 	specificenergy             = 250.0
 	SOC_min                    = 0.2
-	SFC                        = 0.332
 	power_to_weight_motor      = 5200
 	power_to_weight_controller = 3702.70
 	W_engine 				   = 2270.0
@@ -357,29 +375,8 @@ begin
 	η_electric_generator_efficiency = 0.98
 end;
 
-# ╔═╡ 63305423-e5e7-4368-9c30-f2103c6069c9
-md"""
-**Summary**
-
-**η_motor** 	  				  = $(η_motor) 
-**η_controller** 				  = $(η_controller) 
-**η_battery**                     = $(η_battery) 
-**specificenergy** 		  		  = $(specificenergy) Wh/kg    
-**SOC_min** 		  			  = $(SOC_min)  
-**power_to_weight_motor** 		  = $(power_to_weight_motor) W/kg 
-**power_to_weight_controller** 	  = $(power_to_weight_controller) W/kg
-**W_engine** 	  				  = $(W_engine) kg
-**P_max_engine**                  = $(P_max_engine) W
-**No_Engines**                    = $(No_Engines)
-**energy_density_fuel**       	    = $(energy_density_fuel) Wh/kg
-**η_gas_turbine_efficiency** 		= $(η_gas_turbine_efficiency) 
-**η_gearbox_efficiency** 			= $(η_gearbox_efficiency)
-**η_propulsive_efficiency** 		= $(η_propulsive_efficiency)
-**η_electric_generator_efficiency** = $(η_electric_generator_efficiency)
-"""
-
 # ╔═╡ e6b63c45-ff11-4f18-997a-c6a74bc08439
-propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, SFC, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
+propulsion = Propulsion(η_motor, η_controller, η_battery, specificenergy, SOC_min, power_to_weight_motor, power_to_weight_controller, W_engine, P_max_engine, No_Engines, energy_density_fuel, η_gas_turbine_efficiency, η_gearbox_efficiency, η_propulsive_efficiency, η_electric_generator_efficiency)
 
 
 # ╔═╡ 79276a33-b7e9-4e9d-b3b6-0d40e6ee233f
@@ -406,7 +403,7 @@ md"
 | weight_fraction | Weight Fraction for Segment         |                 |
 | dVdt 			  | Acceleration                        | m/s^2           |
 | ρ 			  | Density                             | kg/m^3          |
-
+| SFC 			  | Specific Fuel Consumption           | kg/(kW·h)       |
 "
 
 # ╔═╡ 9dc2d3f4-e4fb-436e-bbd6-2f845e179a8e
@@ -420,46 +417,11 @@ begin
 	load 			= 1
 	dVdt 			= 0.0
 	T, P, ρ  = atmosphere(h);
+	sfc= 0.332
 end;
 
-# ╔═╡ 7ce89f40-f96a-4d6a-9771-0b4bb0454ae3
-md"""
-**Summary**
-
-**name** 	  	    = $(name) 
-**altitude** 		= $(h) 
-**duration**        = $(duration) kg  
-**ROC** 		    = $(ROC)   
-**ϕ** 		  		= $(ϕ)  
-**load** 		    = $(load) 
-**dVdt** 	  	    = $(dVdt)
-**ρ** 	  	    	= $(ρ)
-"""
-
 # ╔═╡ 6a2a83e5-ca37-4f18-aea8-425ab528bf83
-CRUISE = MissionSegment(name, h, V, duration, ROC, ϕ, load, dVdt, ρ)
-
-# ╔═╡ 9e98e3c8-cb09-4242-baaf-a299bc914f1f
-# ╠═╡ disabled = true
-#=╠═╡
-import Pkg
-  ╠═╡ =#
-
-# ╔═╡ f858e0ae-496c-4dcb-a997-e77cb4a48684
-# ╠═╡ show_logs = false
-#=╠═╡
-begin
-	using Pkg
-	using Plots
-    using PlutoUI
-    import PlutoUI: Slider, NumberField, TextField, CheckBox
-	Pkg.add("Revise")
-	Pkg.develop(path="C:\\Users\\sabin\\OneDrive\\Desktop\\FYP\\HybridElectric")
-	using HybridElectric
-	using AeroFuse
-	TableOfContents()
-end
-  ╠═╡ =#
+CRUISE = MissionSegment(name, h, V, duration, ROC, ϕ, load, dVdt, ρ,sfc)
 
 # ╔═╡ Cell order:
 # ╟─4cbf94c2-ca00-11f0-8184-432af9656ff0
@@ -499,14 +461,12 @@ end
 # ╟─0068a8e5-e3da-43b8-9300-18c1b8e3270e
 # ╟─c4f9bcae-f77e-463e-b190-ac06e6b2d6ec
 # ╟─7661aa21-9ebc-48b2-8e07-90416a9794ff
-# ╟─6d1f9727-b9b9-48e5-a08c-d4e0d63fa8e0
+# ╠═6d1f9727-b9b9-48e5-a08c-d4e0d63fa8e0
 # ╠═6869c82f-55d0-468b-b9e6-62f8df5e00f4
-# ╟─63305423-e5e7-4368-9c30-f2103c6069c9
 # ╠═e6b63c45-ff11-4f18-997a-c6a74bc08439
 # ╟─79276a33-b7e9-4e9d-b3b6-0d40e6ee233f
 # ╟─e868d3aa-e84a-48d4-b6ed-bb531f97df72
 # ╟─62bab93a-2a92-4e03-86c8-51a65a6e2242
-# ╟─4d9d3fc8-6ab4-4d9f-b078-a6db198b1ee0
+# ╠═4d9d3fc8-6ab4-4d9f-b078-a6db198b1ee0
 # ╠═9dc2d3f4-e4fb-436e-bbd6-2f845e179a8e
-# ╟─7ce89f40-f96a-4d6a-9771-0b4bb0454ae3
 # ╠═6a2a83e5-ca37-4f18-aea8-425ab528bf83
