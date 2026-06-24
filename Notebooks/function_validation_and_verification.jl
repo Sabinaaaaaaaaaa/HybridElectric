@@ -30,13 +30,15 @@ begin
 	TableOfContents()
 end
 
-# ╔═╡ d757c810-e13f-467f-bba2-6db102b3e01e
+# ╔═╡ c988186c-8932-416d-8ead-c64a5ea65c88
+#=╠═╡
 begin
 	file_path = "C:\\Users\\sabin\\OneDrive\\Desktop\\FYP\\HybridElectric\\src\\file.txt"
 	using DelimitedFiles
 	data = readdlm(file_path; skipstart=12)
 	data
 end
+  ╠═╡ =#
 
 # ╔═╡ b2afe8b0-d096-11f0-af04-7574eb00a750
 md"# Function Validation and Verification"
@@ -127,18 +129,6 @@ md"""
 # ╔═╡ e4ac0d48-6f8e-414b-af94-bdbba09e41f8
 md"### Define Inputs: Dornier 328 Example"
 
-# ╔═╡ 5a340bcc-74bf-4761-a792-794b2f993c9f
-# ╠═╡ disabled = true
-#=╠═╡
-md"""
-MTOW
-$(@bind MTOW Slider(5000.0:20000.0, default=13990.0, show_value=true)) kg
-"""
-  ╠═╡ =#
-
-# ╔═╡ 703b5256-ae37-4e51-b9ea-e62530d89f8e
-MTOW=13990.0
-
 # ╔═╡ 566dba61-de02-42b2-9da5-50b9376d87d5
 begin
 	W_payload = 3671.0;
@@ -155,7 +145,9 @@ begin
 end;
 
 # ╔═╡ d5dbd3b5-2135-49e9-bc4c-9d785b2d94b1
+#=╠═╡
 aircraft = Aircraft(MTOW, W_payload, W_empty, S, AR, e, Cd0, maxfuelweight)
+  ╠═╡ =#
 
 # ╔═╡ a5c65994-bc7f-4eca-b725-7f8f9ee21ffd
 begin
@@ -227,7 +219,9 @@ g=9.81
 md"$D = \frac{1}{2} ρ V^2 S C_d$"
 
 # ╔═╡ cfdab272-c3b0-411d-b85a-8f03ac6f4939
+#=╠═╡
 D = dragforce(aircraft, MTOW, g, CRUISE)
+  ╠═╡ =#
 
 # ╔═╡ 24a979f9-7932-4f7d-8459-6ba43f8591a7
 md"**Verification**"
@@ -236,19 +230,29 @@ md"**Verification**"
 q=0.5*(CRUISE.ρ)*(CRUISE.V^2)
 
 # ╔═╡ 2a408a96-5684-4cc6-8d0c-ea585ede7748
+#=╠═╡
 K=1/(π*aircraft.e*aircraft.AR)
+  ╠═╡ =#
 
 # ╔═╡ 6e59cd33-3343-4897-9a5b-bad08ab0859d
+#=╠═╡
 W=MTOW
+  ╠═╡ =#
 
 # ╔═╡ f1442b85-e9e6-4289-b730-86faa34e92ce
+#=╠═╡
 Cl=W*g/(q*aircraft.S)
+  ╠═╡ =#
 
 # ╔═╡ a41c320e-fc5b-4893-be41-5ab879d960ca
+#=╠═╡
 Cd  = aircraft.Cd0 + K*Cl^2 #drag coefficient
+  ╠═╡ =#
 
 # ╔═╡ 0190530c-dd77-43f6-bbdd-b824020079ec
+#=╠═╡
 Drag=0.5*(CRUISE.ρ)*(CRUISE.V^2)*aircraft.S*Cd
+  ╠═╡ =#
 
 # ╔═╡ 9de0bc16-ad1f-42ea-a013-a419e116ba24
 
@@ -263,13 +267,16 @@ maximum α = 18.750
 "
 
 # ╔═╡ 5c5e0657-347a-4eef-ad42-24d228db53fc
+#=╠═╡
 begin
 	alpha = data[:,1]
 	CL = data[:,2]
 	CD = data[:,3]
 end;
+  ╠═╡ =#
 
 # ╔═╡ 33244633-2341-47b0-b094-a30d4fa62c67
+#=╠═╡
 begin
 	
 	p1 = plot(alpha, CL,
@@ -288,6 +295,7 @@ begin
 	
 	plot(p1, p2, layout=(1,2), size=(1200, 400))
 end
+  ╠═╡ =#
 
 # ╔═╡ f69a98c9-433e-4349-8a1b-f46571a71c43
 CLlow, CDlow = calculateclcd(-20) 
@@ -323,16 +331,24 @@ Potential component: $P_{potential} = W g ROC)$
 "
 
 # ╔═╡ f350490b-f639-4b41-9c70-2fb91efabbb1
+#=╠═╡
 P_drag=D*CRUISE.V
+  ╠═╡ =#
 
 # ╔═╡ 738d5e91-e491-4cd4-a540-2e14ea72d08f
+#=╠═╡
 P_kinetic = (MTOW*CRUISE.V/g)*CRUISE.dVdt
+  ╠═╡ =#
 
 # ╔═╡ eae68a35-c100-4071-bcd0-a07865a6b3a9
+#=╠═╡
 P_potential=MTOW*g*CRUISE.ROC
+  ╠═╡ =#
 
 # ╔═╡ 59ba8a65-1971-46bf-8c30-177a089c24a8
+#=╠═╡
 P_total_req = powerrequired(D, CRUISE.V, MTOW, g, CRUISE.dVdt, CRUISE.ROC) 
+  ╠═╡ =#
 
 # ╔═╡ 16d236e7-6580-4308-a81a-c219908890e9
 md"
@@ -369,7 +385,9 @@ end
 takeoff = MissionSegment("Takeoff", h, Vtakeoff, Vtakeoff/1000, ROC, ϕ, load, 2, 1.225, 0.3)
 
 # ╔═╡ 129ffe98-1444-43c2-b115-9335fed08816
+#=╠═╡
 Powerreq=takeoffpowerrequired(MTOW,g, takeoff.V, μ, takeoff.dVdt, LD)
+  ╠═╡ =#
 
 # ╔═╡ 03818506-af7e-4151-96e8-4b6b38248d19
 
@@ -392,13 +410,19 @@ The units are the same units that the input $P_{total_{req}}$ is defined as. Thi
 "
 
 # ╔═╡ e20e4f87-a763-47d6-b252-7e073b1e717e
+#=╠═╡
 P_EM_req, P_FB_req = powersplit(P_total_req, ϕ) 
+  ╠═╡ =#
 
 # ╔═╡ 20df341b-33e0-4460-8607-e40d606fbef4
+#=╠═╡
 P_EM_req0, P_FB_req0 = powersplit(P_total_req, 0) 
+  ╠═╡ =#
 
 # ╔═╡ 29356dd2-61d4-4d99-a69f-1e7466398143
+#=╠═╡
 P_EM_req1, P_FB_req1 = powersplit(P_total_req, 1) 
+  ╠═╡ =#
 
 # ╔═╡ 413fb4e9-13de-4554-9d81-0fd9e6de3f4d
 
@@ -535,6 +559,20 @@ end;
 # ╔═╡ 60530e30-e409-4b64-b41a-28527390d864
 Weight = component_weight(P_max, power_to_weight)
 
+# ╔═╡ 5a340bcc-74bf-4761-a792-794b2f993c9f
+# ╠═╡ disabled = true
+#=╠═╡
+md"""
+MTOW
+$(@bind MTOW Slider(5000.0:20000.0, default=13990.0, show_value=true)) kg
+"""
+  ╠═╡ =#
+
+# ╔═╡ 703b5256-ae37-4e51-b9ea-e62530d89f8e
+#=╠═╡
+MTOW=13990.0
+  ╠═╡ =#
+
 # ╔═╡ Cell order:
 # ╟─b2afe8b0-d096-11f0-af04-7574eb00a750
 # ╟─ca59f52a-0dfc-4708-8418-5fb46252a9e8
@@ -577,7 +615,7 @@ Weight = component_weight(P_max, power_to_weight)
 # ╠═0190530c-dd77-43f6-bbdd-b824020079ec
 # ╟─9de0bc16-ad1f-42ea-a013-a419e116ba24
 # ╟─b4b71505-7987-4f7f-aab5-7559a34bb2fa
-# ╠═d757c810-e13f-467f-bba2-6db102b3e01e
+# ╠═c988186c-8932-416d-8ead-c64a5ea65c88
 # ╠═e67aff11-db63-4e43-9bec-29b6fd883ac1
 # ╠═5c5e0657-347a-4eef-ad42-24d228db53fc
 # ╟─33244633-2341-47b0-b094-a30d4fa62c67

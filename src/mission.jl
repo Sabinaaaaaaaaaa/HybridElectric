@@ -9,7 +9,7 @@
 
 #initialise the state 
 function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_packs, W_fuel_initial, g, η, μ, LD_takeoff; turbofan=false)
-    #this state describes the cumulative effect of each state on the TIME, SOC, W_fuel, W_total 
+    #This state describes the cumulative effect of each state on the TIME, SOC, W_fuel, W_total 
     state = MissionState(
         0.0,
         1.0,
@@ -17,7 +17,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
         0.0
     )
 
-    #total amount of capacity that the battery can provide!
+    #Total amount of capacity that the battery can provide!
     batterycapacity = batt.energystoragecapacity * num_battery_packs #Wh
     W_battery = batt.weight * num_battery_packs #kg
     BatteryPowerRating=batt.maxcontinuouspower * num_battery_packs #W
@@ -26,14 +26,14 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
     for segment in FULLMISSION #this iterates across the FULLMISSION ARRAY, each segment is a MissionSegment
 
 
-        #time discretisation
+        #Time discretisation
         dt=1.0 #seconds 
-        #time refers to the time of the current flight segment
+        #Time refers to the time of the current flight segment
         N = Int(floor(segment.duration/ dt)) #number of steps
 
         for _ in 1:N
-            #calculate CURRENT WEIGHT at moment in time
-            #the battery weight and everything is constant but the fuel changes
+            #Calculate CURRENT WEIGHT at moment in time
+            #The battery weight and everything is constant but the fuel changes
                       
             weight=Aircraft.W_empty + Aircraft.W_payload + W_PGD + W_battery + state.W_fuel #assuming empty weight includes mass of engines
             state.W_total=weight 
@@ -42,7 +42,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
 
 
             #POWER REQUIREMENTS
-            #calculate power required with the current weight estimate at this flight stage
+            #Calculate power required with the current weight estimate at this flight stage
             if segment.name=="Takeoff"
                 P_req=takeoffpowerrequired(weight, segment.load*g, segment.V, μ, segment.dVdt, LD_takeoff)/η
             elseif segment.name=="Taxi"
@@ -51,10 +51,10 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
             else
                 P_req=powerrequired(drag, segment.V, weight, segment.load*g, segment.dVdt, segment.ROC)/η 
             end
-            #power split
+            #Power split
             P_EM_req, P_FB_req =powersplit(P_req, segment.ϕ)
 
-            #validation checks to see if engine is able to deliver this!
+            #Validation checks to see if engine is able to deliver this
             if turbofan
                 P_max_engine=Propulsion.P_max_engine*segment.V
             else
@@ -74,7 +74,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
             
 
             #ELECTRICAL INTEGRATION PART
-            #update State Of Charge SOC
+            #Update State Of Charge SOC
             if P_battery > 0
                 SOC_new, E_used = stateofcharge(state.SOC, P_battery, dt, batterycapacity)
 
@@ -82,7 +82,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
                 if SOC_new < Propulsion.SOC_min
                     println("Battery depleted during mission segment after $(state.time) seconds! SOC dropped below 20%.")
                     batterydepleted=true
-                    # Don't update SOC below minimum
+                    #Don't update SOC below minimum
                     return false, state.SOC, batterydepleted, state.W_fuel
                 else
                     state.SOC = SOC_new
@@ -107,7 +107,7 @@ function runmission(FULLMISSION, Propulsion, Aircraft, W_PGD, batt, num_battery_
         println("Completed segment: $(segment.name), Time: $(state.time) seconds, SOC: $(round(state.SOC*100,digits=2))%, Remaining Fuel Mass: $(round(state.W_fuel,digits=2)) kg")
 
     end
-    #mission is complete!
+    #Mission is complete!
     return true, state.SOC, batterydepleted, state.W_fuel
 end
 
@@ -121,9 +121,9 @@ function batteryandfuelsizing(Max_iterations, FULLMISSION, Propulsion, Aircraft,
 
     fully_electric = all(seg -> seg.ϕ == 1, FULLMISSION)
 
-    #volume constraints 
+    #Volume constraints 
     FuelMax=Aircraft.maxfuelweight           # Maximum Fuel Capacity [kg] 
-    # Maximum Battery Volume [m^3]
+    #Maximum Battery Volume [m^3]
     feasible=false
 
     for j in 1:Max_iterations

@@ -23,7 +23,7 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
         end
     end
 
-    c       = c_R.*R # chord distribution
+    c       = c_R.*R #chord distribution
     θ       = deg2rad.(beta_table) #twist distribution
 
 
@@ -83,14 +83,14 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
             Cn        = Cl*cos(φ) - Cd*sin(φ) ;#normal force coefficient
             Ct        = Cl*sin(φ) + Cd*cos(φ); #tangential force coefficienct
             
-            F = prandtl_F(Nb, R, r_hub, ri, φ)#prantl meyer correction
+            F = prandtl_F(Nb, R, r_hub, ri, φ)#prandtl meyer correction
 
             #solidity
             σ         = Nb*ci/(2*pi*ri);
 
 
-            # BEM equations for induction factors
-            # Standard formulation
+            #BEMT equations for induction factors
+            
             if abs(Cn) > 1e-8 && abs(sin(φ)) > 1e-8
                 κ  = 4 * F * sin(φ)^2       / (σ * Cn)
                 a_new  = 1.0 / (κ - 1.0)
@@ -108,17 +108,14 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
 
 
 
-
-
-            # Clamp values to physical bounds
             a_new = clamp(a_new, -0.5, 0.95);
             ap_new = clamp(ap_new, -1.0, 1.0);
 
-            # relaxation
+            #relaxation
             a_next = (1-relax)*a[i] + relax*a_new;
             ap_next = (1-relax)*ap[i] + relax*ap_new;
 
-            # convergence check
+            #convergence check
             if max(abs(a_next - a[i]), abs(ap_next - ap[i])) < tol
                 a[i] = a_next; 
                 ap[i] = ap_next;
@@ -153,7 +150,7 @@ function BEMT(R, r_hub, Nb, r_R, c_R, beta_table ,V∞,Ω, ρ)
     
 
     #OUTPUT RESULTS
-    T       = sum(dT)*Nb         #Thrust per propeller!!!
+    T       = sum(dT)*Nb         #Thrust per propeller
     Q       = sum(dQ)  *Nb       #Torque
     P       = Q * ω              #Power
     η = (T*V∞)/P;                #Efficiency 

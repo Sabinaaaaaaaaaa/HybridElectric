@@ -11,7 +11,6 @@ AIRFOILDATA = let
      calculateclvalue = LinearInterpolation(alpha, CL; extrapolation_bc = Line())
      calculatecdvalue = LinearInterpolation(alpha, CD; extrapolation_bc = Line())
      
-     # Return the interpolation objects themselves, not the result
      (cl = calculateclvalue, cd = calculatecdvalue)
 end
 

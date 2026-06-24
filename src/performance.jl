@@ -188,9 +188,9 @@ end
 
 
 function payloadvolume(x_start, x_end, z_start, z_end; width= -1.0 ,radius=-1.0, λ=-1)
-	#assuming symmetrical
-	#assume reduction in volume is proportional to reduction in mass?
-	#assume reduction in volume takes place along the length!!!
+	#Assuming symmetrical
+	#Assume reduction in volume is proportional to reduction in mass?
+	#Assume reduction in volume takes place along the length!!!
 	
 	#VAIDATION
 	if λ < 0.0 || λ > 1.0
